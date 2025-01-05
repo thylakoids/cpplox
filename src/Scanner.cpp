@@ -140,15 +140,12 @@ void Scanner::scanToken() {
   case '"':
     handleString();
     break;
-  case '0' ... '9':
-    handleNumber();
-    break;
-  case 'a' ... 'z':
-  case 'A' ... 'Z':
-  case '_':
-    handleIdentifier();
-    break;
   default:
+    if (std::isdigit(c))
+      handleNumber();
+    else if (std::isalpha(c) || c == '_')
+      handleIdentifier();
+    else
     error(m_line, fmt::format("Unexpected character \"{}\"", c));
     break;
   }

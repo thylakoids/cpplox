@@ -18,6 +18,8 @@ __pycache__/
 *.so
 *.out
 .ccls-cache
+.cache
+compile_commands.json
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -51,6 +53,3 @@ yarn-debug.log*
 yarn-error.log*
 
 .eslintcache
-
-.cache
-compile_commands.json
