@@ -2,14 +2,17 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <vector>
+#include "Scanner.h"
 
 using std::cout;
 using std::endl;
 using std::string;
+using std::vector;
 
 void runFile(const string &);
 void runPrompt();
-string run(const string &);
+void run(const string &);
 
 int main(int argc, char *argv[]) {
   if (argc > 2) {
@@ -42,13 +45,16 @@ void runPrompt() {
   while (true) {
     cout << '>';
     getline(std::cin, line);
-    cout << line << endl;
     if (line == ".exit")
       break;
-    cout << run(line) << endl;
+    run(line);
   }
 }
 
-string run(const string &source) {
-    return source;
+void run(const string &source) {
+    Scanner scanner(source);
+    vector<Token> tokens = scanner.scanTokens();
+    for (const Token &token : tokens) {
+      cout << token.toString() << endl;
+    }
 }

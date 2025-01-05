@@ -52,4 +52,5 @@ yarn-error.log*
 
 .eslintcache
 
-build
+.cache
+compile_commands.json
