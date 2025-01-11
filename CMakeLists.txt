@@ -18,5 +18,9 @@ add_executable(${PROJECT_NAME}
     src/Scanner.cpp
 )
 
+add_executable(test_expr 
+    src/test_expr.cpp
+)
+
 find_package(fmt)
 target_link_libraries(${PROJECT_NAME} fmt::fmt)
