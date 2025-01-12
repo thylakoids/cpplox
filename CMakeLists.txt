@@ -16,6 +16,8 @@ file(CREATE_LINK
 add_executable(${PROJECT_NAME}
     src/lox.cpp
     src/Scanner.cpp
+    src/Token.cpp
+    src/error.cpp
 )
 
 add_executable(test_expr 

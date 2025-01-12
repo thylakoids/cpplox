@@ -17,7 +17,7 @@ public:
     }
 
     std::string visitLiteralExpr(const LiteralExpr &expr) override {
-        return expr.value;
+        return std::visit(LiteralPrinter{}, expr.value);
     }
 
     std::string visitUnaryExpr(const UnaryExpr &expr) override {
@@ -25,6 +25,15 @@ public:
     }
 
 private:
+    // Helper struct to print different literal types
+    struct LiteralPrinter {
+        std::string operator()(const std::string& s) const { return s; }
+        std::string operator()(bool b) const { return b ? "true" : "false"; }
+        std::string operator()(int d) const { return std::to_string(d); }
+        std::string operator()(double d) const { return std::to_string(d); }
+        std::string operator()(std::nullptr_t) const { return "nil"; }
+    };
+
     std::string parenthesize(const std::string& name, const std::initializer_list<const Expr*>& exprs) {
         std::stringstream builder;
 

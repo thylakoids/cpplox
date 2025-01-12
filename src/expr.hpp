@@ -1,11 +1,15 @@
 #pragma once
 #include <string>
+#include <variant>
 
 // Forward declaration
 class BinaryExpr;
 class UnaryExpr;
 class LiteralExpr;
 class GroupingExpr;
+
+// Define literal value type that can hold any kind of literal
+using LiteralValue = std::variant<std::string, double, int, bool, std::nullptr_t>;
 
 // Visitor pattern
 template <typename R>
@@ -57,13 +61,14 @@ public:
 // Literal expression
 class LiteralExpr : public Expr {
 public:
-    LiteralExpr(const std::string &value) : value(value) {}
+    LiteralExpr(const LiteralValue &value) : value(value) {}
+    LiteralExpr() : value(nullptr) {}  // for nil
 
     std::string accept(ExprVisitor<std::string> &visitor) const override {
         return visitor.visitLiteralExpr(*this);
     }
 
-    const std::string value;
+    const LiteralValue value;
 };
 
 // Grouping expression

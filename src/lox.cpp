@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 #include "Scanner.h"
+#include "Parser.hpp"
+#include "AstPrinter.hpp"
+#include "error.h"
 
 using std::cout;
 using std::endl;
@@ -34,27 +37,41 @@ void runFile(const string &path) {
     ss << ifile.rdbuf();
     run(ss.str());
     ifile.close();
+    
+    // Indicate an error in the exit code
+    if (lox::hadError) exit(65);
+    if (lox::hadRuntimeError) exit(70);
   } else {
-    cout << "Open file" << path << endl;
+    cout << "Failed to open file: " << path << endl;
+    exit(74);
   }
 }
 
 void runPrompt() {
-  cout << "Welcome to JackAnalyzer!" << endl;
+  cout << "Welcome to Lox!" << endl;
   string line;
   while (true) {
-    cout << '>';
-    getline(std::cin, line);
-    if (line == ".exit")
-      break;
+    cout << "> ";
+    if (!std::getline(std::cin, line)) break;
+    if (line == ".exit") break;
     run(line);
+    // Reset error flag in REPL mode
+    lox::resetError();
   }
 }
 
 void run(const string &source) {
     Scanner scanner(source);
     vector<Token> tokens = scanner.scanTokens();
-    for (const Token &token : tokens) {
-      cout << token.toString() << endl;
+
+    Parser parser(tokens);
+    Expr *expr = parser.parse();
+    
+    // Stop if there was a syntax error
+    if (lox::hadError) return;
+
+    if (expr != nullptr) {
+      AstPrinter printer;
+      cout << printer.print(*expr) << endl;
     }
 }
