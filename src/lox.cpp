@@ -7,6 +7,7 @@
 #include "Parser.hpp"
 #include "AstPrinter.hpp"
 #include "error.h"
+#include "Interpreter.hpp"
 
 using std::cout;
 using std::endl;
@@ -37,7 +38,7 @@ void runFile(const string &path) {
     ss << ifile.rdbuf();
     run(ss.str());
     ifile.close();
-    
+
     // Indicate an error in the exit code
     if (lox::hadError) exit(65);
     if (lox::hadRuntimeError) exit(70);
@@ -66,12 +67,15 @@ void run(const string &source) {
 
     Parser parser(tokens);
     Expr *expr = parser.parse();
-    
+
     // Stop if there was a syntax error
     if (lox::hadError) return;
 
     if (expr != nullptr) {
+      // todo: distinguish between int and double
       AstPrinter printer;
-      cout << printer.print(*expr) << endl;
+      Interpreter interpreter;
+      cout << printer.print(*expr) << " = ";
+      cout << interpreter.interpret(*expr) << endl;
     }
 }

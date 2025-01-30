@@ -30,7 +30,15 @@ private:
         std::string operator()(const std::string& s) const { return s; }
         std::string operator()(bool b) const { return b ? "true" : "false"; }
         std::string operator()(int d) const { return std::to_string(d); }
-        std::string operator()(double d) const { return std::to_string(d); }
+        std::string operator()(double d) const {
+          std::string s = std::to_string(d);
+          // trim trailing zeros
+          s.erase(s.find_last_not_of('0') + 1);
+          if (s.back() == '.') {
+              s.erase(s.size() - 1);
+          }
+          return s;
+        }
         std::string operator()(std::nullptr_t) const { return "nil"; }
     };
 

@@ -27,6 +27,7 @@ class Expr {
 public:
     virtual ~Expr() = default;
     virtual std::string accept(ExprVisitor<std::string> &visitor) const = 0;
+    virtual LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const = 0;
 };
 
 // Binary expression
@@ -36,6 +37,10 @@ public:
         : left(left), op(op), right(right) {}
 
     std::string accept(ExprVisitor<std::string> &visitor) const override {
+        return visitor.visitBinaryExpr(*this);
+    }
+
+    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
         return visitor.visitBinaryExpr(*this);
     }
 
@@ -54,6 +59,10 @@ public:
         return visitor.visitUnaryExpr(*this);
     }
 
+    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+        return visitor.visitUnaryExpr(*this);
+    }
+
     const std::string op;
     const Expr &right;
 };
@@ -68,6 +77,10 @@ public:
         return visitor.visitLiteralExpr(*this);
     }
 
+    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+        return visitor.visitLiteralExpr(*this);
+    }
+
     const LiteralValue value;
 };
 
@@ -77,6 +90,10 @@ public:
     GroupingExpr(const Expr &expr) : expr(expr) {}
 
     std::string accept(ExprVisitor<std::string> &visitor) const override {
+        return visitor.visitGroupingExpr(*this);
+    }
+
+    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
         return visitor.visitGroupingExpr(*this);
     }
 

@@ -118,7 +118,9 @@ private:
       return allocate<LiteralExpr>(true);
     if (match({TokenType::NIL}))
       return allocate<LiteralExpr>();
-    if (match({TokenType::NUMBER, TokenType::STRING}))
+    if (match({TokenType::NUMBER}))
+      return allocate<LiteralExpr>(std::stod(previous().lexeme));
+    if (match({TokenType::STRING}))
       return allocate<LiteralExpr>(previous().lexeme);
     if (match({TokenType::LEFT_PAREN})) {
       Expr *exprptr = expression();
