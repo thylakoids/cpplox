@@ -8,7 +8,8 @@
 
 class RuntimeError : public std::runtime_error {
 public:
-    RuntimeError(const std::string& message) : std::runtime_error(message) {}
+    Token m_token;
+    RuntimeError(const Token& token, const std::string& message) : m_token(token), std::runtime_error(message) {}
 };
 
 class Interpreter : public ExprVisitor<LiteralValue> {
@@ -20,8 +21,7 @@ public:
             AstPrinter printer;
             return printer.print(literal);
         } catch (const RuntimeError& error) {
-            lox::runtimeError(error.what());
-            lox::hadRuntimeError = true;
+            lox::error(error.m_token, error.what(), true);
             return "";
         }
     }
@@ -37,74 +37,74 @@ public:
     LiteralValue visitUnaryExpr(const UnaryExpr &expr) override {
         LiteralValue right = evaluate(expr.right);
 
-        if (expr.op == "-") {
-            checkNumberOperand(right);
+        if (expr.op.lexeme == "-") {
+            checkNumberOperand(expr.op, right);
             if (std::holds_alternative<double>(right)) {
                 return -std::get<double>(right);
             }
             return -std::get<int>(right);
-        } else if (expr.op == "!") {
+        } else if (expr.op.lexeme == "!") {
             return !isTruthy(right);
         }
 
         // Unreachable
-        throw RuntimeError("Invalid unary operator");
+        throw RuntimeError(expr.op, "Invalid unary operator");
     }
 
     LiteralValue visitBinaryExpr(const BinaryExpr &expr) override {
         LiteralValue left = evaluate(expr.left);
         LiteralValue right = evaluate(expr.right);
 
-        if (expr.op == "+") {
+        if (expr.op.lexeme == "+") {
             if (std::holds_alternative<std::string>(left) && std::holds_alternative<std::string>(right)) {
                 return std::get<std::string>(left) + std::get<std::string>(right);
             }
             if (isNumber(left) && isNumber(right)) {
                 return getNumberValue(left) + getNumberValue(right);
             }
-            throw RuntimeError("Operands must be two numbers or two strings.");
+            throw RuntimeError(expr.op, "Operands must be two numbers or two strings.");
         }
-        else if (expr.op == "-") {
-            checkNumberOperands(left, right);
+        else if (expr.op.lexeme == "-") {
+            checkNumberOperand(expr.op, left, right);
             return getNumberValue(left) - getNumberValue(right);
         }
-        else if (expr.op == "*") {
-            checkNumberOperands(left, right);
+        else if (expr.op.lexeme == "*") {
+            checkNumberOperand(expr.op, left, right);
             return getNumberValue(left) * getNumberValue(right);
         }
-        else if (expr.op == "/") {
-            checkNumberOperands(left, right);
+        else if (expr.op.lexeme == "/") {
+            checkNumberOperand(expr.op, left, right);
             double rightNum = getNumberValue(right);
             if (rightNum == 0) {
-                throw RuntimeError("Division by zero.");
+                throw RuntimeError(expr.op, "Division by zero.");
             }
             return getNumberValue(left) / rightNum;
         }
-        else if (expr.op == ">") {
-            checkNumberOperands(left, right);
+        else if (expr.op.lexeme == ">") {
+            checkNumberOperand(expr.op, left, right);
             return getNumberValue(left) > getNumberValue(right);
         }
-        else if (expr.op == ">=") {
-            checkNumberOperands(left, right);
+        else if (expr.op.lexeme == ">=") {
+            checkNumberOperand(expr.op, left, right);
             return getNumberValue(left) >= getNumberValue(right);
         }
-        else if (expr.op == "<") {
-            checkNumberOperands(left, right);
+        else if (expr.op.lexeme == "<") {
+            checkNumberOperand(expr.op, left, right);
             return getNumberValue(left) < getNumberValue(right);
         }
-        else if (expr.op == "<=") {
-            checkNumberOperands(left, right);
+        else if (expr.op.lexeme == "<=") {
+            checkNumberOperand(expr.op, left, right);
             return getNumberValue(left) <= getNumberValue(right);
         }
-        else if (expr.op == "==") {
+        else if (expr.op.lexeme == "==") {
             return isEqual(left, right);
         }
-        else if (expr.op == "!=") {
+        else if (expr.op.lexeme == "!=") {
             return !isEqual(left, right);
         }
 
         // Unreachable
-        throw RuntimeError("Invalid binary operator");
+        throw RuntimeError(expr.op, "Invalid binary operator");
     }
 private:
     LiteralValue evaluate(const Expr& expr) {
@@ -130,24 +130,26 @@ private:
     }
 
     double getNumberValue(const LiteralValue& value) {
+        // Only call this function if isNumber(value) returns true
         if (std::holds_alternative<double>(value)) {
             return std::get<double>(value);
         }
         if (std::holds_alternative<int>(value)) {
             return static_cast<double>(std::get<int>(value));
         }
-        throw RuntimeError("Operand must be a number.");
+        // Unreachable
+        throw std::runtime_error("Value is not a number.");
     }
 
-    void checkNumberOperand(const LiteralValue& operand) {
+    void checkNumberOperand(const Token& op, const LiteralValue& operand) {
         if (!isNumber(operand)) {
-            throw RuntimeError("Operand must be a number.");
+            throw RuntimeError(op, "Operand must be a number.");
         }
     }
 
-    void checkNumberOperands(const LiteralValue& left, const LiteralValue& right) {
+    void checkNumberOperand(const Token& op, const LiteralValue& left, const LiteralValue& right) {
         if (!isNumber(left) || !isNumber(right)) {
-            throw RuntimeError("Operands must be numbers.");
+            throw RuntimeError(op, "Operands must be numbers.");
         }
     }
 };

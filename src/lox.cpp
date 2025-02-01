@@ -72,7 +72,6 @@ void run(const string &source) {
     if (lox::hadError) return;
 
     if (expr != nullptr) {
-      // todo: distinguish between int and double
       AstPrinter printer;
       Interpreter interpreter;
       cout << printer.print(*expr) << " = ";

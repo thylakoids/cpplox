@@ -60,7 +60,7 @@ private:
     while (match({TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL})) {
       Token op = previous();
       Expr *right = comparison();
-      exprptr = allocate<BinaryExpr>(*exprptr, op.lexeme, *right);
+      exprptr = allocate<BinaryExpr>(*exprptr, op, *right);
     }
     return exprptr;
   }
@@ -72,7 +72,7 @@ private:
                   TokenType::LESS_EQUAL})) {
       Token op = previous();
       Expr *right = term();
-      exprptr = allocate<BinaryExpr>(*exprptr, op.lexeme, *right);
+      exprptr = allocate<BinaryExpr>(*exprptr, op, *right);
     }
     return exprptr;
   }
@@ -83,7 +83,7 @@ private:
     while (match({TokenType::MINUS, TokenType::PLUS})) {
       Token op = previous();
       Expr *right = factor();
-      exprptr = allocate<BinaryExpr>(*exprptr, op.lexeme, *right);
+      exprptr = allocate<BinaryExpr>(*exprptr, op, *right);
     }
     return exprptr;
   }
@@ -94,7 +94,7 @@ private:
     while (match({TokenType::SLASH, TokenType::STAR})) {
       Token op = previous();
       Expr *right = unary();
-      exprptr = allocate<BinaryExpr>(*exprptr, op.lexeme, *right);
+      exprptr = allocate<BinaryExpr>(*exprptr, op, *right);
     }
     return exprptr;
   }
@@ -104,7 +104,7 @@ private:
     if (match({TokenType::BANG, TokenType::MINUS})) {
       Token op = previous();
       Expr *right = unary();
-      return allocate<UnaryExpr>(op.lexeme, *right);
+      return allocate<UnaryExpr>(op, *right);
     }
     return primary();
   }
@@ -118,8 +118,12 @@ private:
       return allocate<LiteralExpr>(true);
     if (match({TokenType::NIL}))
       return allocate<LiteralExpr>();
-    if (match({TokenType::NUMBER}))
-      return allocate<LiteralExpr>(std::stod(previous().lexeme));
+    if (match({TokenType::NUMBER})) {
+      if (previous().lexeme.find('.') != std::string::npos)
+        return allocate<LiteralExpr>(std::stod(previous().lexeme));
+      return allocate<LiteralExpr>(std::stoi(previous().lexeme));
+
+    }
     if (match({TokenType::STRING}))
       return allocate<LiteralExpr>(previous().lexeme);
     if (match({TokenType::LEFT_PAREN})) {

@@ -9,7 +9,7 @@ public:
     }
 
     std::string visitBinaryExpr(const BinaryExpr &expr) override {
-        return parenthesize(expr.op, {&expr.left, &expr.right});
+        return parenthesize(expr.op.lexeme, {&expr.left, &expr.right});
     }
 
     std::string visitGroupingExpr(const GroupingExpr &expr) override {
@@ -21,7 +21,7 @@ public:
     }
 
     std::string visitUnaryExpr(const UnaryExpr &expr) override {
-        return parenthesize(expr.op, {&expr.right});
+        return parenthesize(expr.op.lexeme, {&expr.right});
     }
 
 private:
@@ -35,7 +35,7 @@ private:
           // trim trailing zeros
           s.erase(s.find_last_not_of('0') + 1);
           if (s.back() == '.') {
-              s.erase(s.size() - 1);
+              s.push_back('0');
           }
           return s;
         }
