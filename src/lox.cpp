@@ -66,15 +66,9 @@ void run(const string &source) {
     vector<Token> tokens = scanner.scanTokens();
 
     Parser parser(tokens);
-    Expr *expr = parser.parse();
-
+    std::vector<Stmt*> statements = parser.parse();
     // Stop if there was a syntax error
     if (lox::hadError) return;
-
-    if (expr != nullptr) {
-      AstPrinter printer;
-      Interpreter interpreter;
-      cout << printer.print(*expr) << " = ";
-      cout << interpreter.interpret(*expr) << endl;
-    }
+    Interpreter interpreter;
+    interpreter.interpret(statements);
 }

@@ -1,9 +1,11 @@
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
 #pragma once
+#include <iostream>
 #include <stdexcept>
 #include "AstPrinter.hpp"
-#include "expr.hpp"
+#include "Expr.hpp"
+#include "Stmt.hpp"
 #include "error.h"
 
 class RuntimeError : public std::runtime_error {
@@ -12,17 +14,15 @@ public:
     RuntimeError(const Token& token, const std::string& message) : m_token(token), std::runtime_error(message) {}
 };
 
-class Interpreter : public ExprVisitor<LiteralValue> {
+class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
 public:
-    std::string interpret(const Expr& expr) {
+    void interpret(const std::vector<Stmt*>& statements) {
         try {
-            LiteralValue value = evaluate(expr);
-            auto literal = LiteralExpr(value);
-            AstPrinter printer;
-            return printer.print(literal);
+            for (const Stmt* stmt : statements) {
+                execute(*stmt);
+            }
         } catch (const RuntimeError& error) {
             lox::error(error.m_token, error.what(), true);
-            return "";
         }
     }
 
@@ -106,9 +106,24 @@ public:
         // Unreachable
         throw RuntimeError(expr.op, "Invalid binary operator");
     }
+
+    void visitExpressionStmt(const ExpressionStmt &stmt) override {
+        evaluate(stmt.expression);
+    }
+
+    void visitPrintStmt(const PrintStmt &stmt) override {
+        LiteralValue value = evaluate(stmt.expression);
+        AstPrinter printer;
+        std::cout << printer.print(LiteralExpr(value)) << std::endl;
+    }
+
 private:
     LiteralValue evaluate(const Expr& expr) {
         return expr.accept(*this);
+    }
+
+    void execute(const Stmt& stmt) {
+        stmt.accept(*this);
     }
 
     bool isTruthy(const LiteralValue& value) {

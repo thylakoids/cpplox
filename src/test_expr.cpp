@@ -1,7 +1,7 @@
 #include <memory>
 #include <iostream>
 #include "Token.h"
-#include "expr.hpp"
+#include "Expr.hpp"
 #include "AstPrinter.hpp"
 
 int main() {

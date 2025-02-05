@@ -1,4 +1,7 @@
+#ifndef EXPR_H_
+#define EXPR_H_
 #pragma once
+
 #include <string>
 #include <variant>
 #include "Token.h"
@@ -101,3 +104,5 @@ public:
 
     const Expr &expr;
 };
+
+#endif // EXPR_H_

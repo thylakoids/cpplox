@@ -1,7 +1,8 @@
 #pragma once
 #include "Token.h"
 #include "error.h"
-#include "expr.hpp"
+#include "Expr.hpp"
+#include "Stmt.hpp"
 #include <vector>
 
 
@@ -19,9 +20,12 @@ public:
 
   // Destructor
   ~Parser() {
-    // Clean up all allocated expressions
+    // Clean up all allocated expressions and statements
     for (Expr* expr : m_allocated_exprs) {
       delete expr;
+    }
+    for (Stmt* stmt : m_allocated_stmts) {
+      delete stmt;
     }
   }
 
@@ -31,22 +35,70 @@ public:
   Parser(Parser&&) = delete;
   Parser& operator=(Parser&&) = delete;
 
-  Expr *parse() {
-    try {
-      return expression();
-    } catch (const ParseError &e) {
-      synchronize();
-      return nullptr;
+  std::vector<Stmt*> parse() {
+    std::vector<Stmt*> statements;
+    while (!isAtEnd()) {
+      try {
+        statements.push_back(statement());
+      } catch (const ParseError &error) {
+        synchronize();
+      }
     }
+    return statements;
   }
 
 private:
   // Helper function to track allocated expressions
   template<typename T, typename... Args>
   T* allocate(Args&&... args) {
-    T* expr = new T(std::forward<Args>(args)...);
-    m_allocated_exprs.push_back(expr);
-    return expr;
+    if constexpr (std::is_base_of_v<Expr, T>) {
+      T* expr = new T(std::forward<Args>(args)...);
+      m_allocated_exprs.push_back(expr);
+      return expr;
+    } else if constexpr (std::is_base_of_v<Stmt, T>) {
+      T* stmt = new T(std::forward<Args>(args)...);
+      m_allocated_stmts.push_back(stmt);
+      return stmt;
+    }
+  }
+
+  /* Stmt* declaration() { */
+  /*   try { */
+  /*     if (match({TokenType::VAR})) return varDeclaration(); */
+  /*     return statement(); */
+  /*   } catch (const ParseError& error) { */
+  /*     synchronize(); */
+  /*     return nullptr; */
+  /*   } */
+  /* } */
+
+  /* Stmt* varDeclaration() { */
+  /*   Token name = consume(TokenType::IDENTIFIER, "Expect variable name."); */
+
+  /*   Expr* initializer = nullptr; */
+  /*   if (match({TokenType::EQUAL})) { */
+  /*     initializer = expression(); */
+  /*   } */
+
+  /*   consume(TokenType::SEMICOLON, "Expect ';' after variable declaration."); */
+  /*   return allocate<VarStmt>(name, initializer); */
+  /* } */
+
+  Stmt* statement() {
+    if (match({TokenType::PRINT})) return printStatement();
+    return expressionStatement();
+  }
+
+  Stmt* printStatement() {
+    Expr* value = expression();
+    consume(TokenType::SEMICOLON, "Expect ';' after value.");
+    return allocate<PrintStmt>(*value);
+  }
+
+  Stmt* expressionStatement() {
+    Expr* expr = expression();
+    consume(TokenType::SEMICOLON, "Expect ';' after expression.");
+    return allocate<ExpressionStmt>(*expr);
   }
 
   Expr *expression() {
@@ -171,10 +223,10 @@ private:
     return false;
   }
 
-  void consume(TokenType type, const std::string &message) {
+  Token consume(TokenType type, const std::string &message) {
     if (!check(type))
       throw error(peek(), message);
-    advance();
+    return advance();
   }
 
   bool check(TokenType type) {
@@ -199,5 +251,6 @@ private:
 private:
   std::vector<Token> m_tokens;
   std::vector<Expr*> m_allocated_exprs;  // Track allocated expressions
+  std::vector<Stmt*> m_allocated_stmts;  // Track allocated statements
   int m_current = 0;
 };
