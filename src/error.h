@@ -1,5 +1,13 @@
 #pragma once
+#include <stdexcept>
 #include "Token.h"
+
+
+class RuntimeError : public std::runtime_error {
+public:
+    Token m_token;
+    RuntimeError(const Token& token, const std::string& message) : m_token(token), std::runtime_error(message) {}
+};
 
 namespace lox {
 // Global error state

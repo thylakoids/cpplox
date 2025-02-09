@@ -11,6 +11,7 @@ class BinaryExpr;
 class UnaryExpr;
 class LiteralExpr;
 class GroupingExpr;
+class VariableExpr;
 
 // Define literal value type that can hold any kind of literal
 // todo: int is redundant
@@ -24,6 +25,7 @@ public:
     virtual R visitUnaryExpr(const UnaryExpr &expr) = 0;
     virtual R visitLiteralExpr(const LiteralExpr &expr) = 0;
     virtual R visitGroupingExpr(const GroupingExpr &expr) = 0;
+    virtual R visitVariableExpr(const VariableExpr &expr) = 0;
     virtual ~ExprVisitor() = default;
 };
 
@@ -103,6 +105,22 @@ public:
     }
 
     const Expr &expr;
+};
+
+// Variable expression
+class VariableExpr : public Expr {
+public:
+    VariableExpr(const Token &name) : name(name) {}
+
+    std::string accept(ExprVisitor<std::string> &visitor) const override {
+        return visitor.visitVariableExpr(*this);
+    }
+
+    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+        return visitor.visitVariableExpr(*this);
+    }
+
+    const Token name;
 };
 
 #endif // EXPR_H_

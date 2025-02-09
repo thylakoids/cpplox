@@ -22,7 +22,7 @@ class StmtVisitor {
 public:
     virtual R visitExpressionStmt(const ExpressionStmt &stmt) = 0;
     virtual R visitPrintStmt(const PrintStmt &stmt) = 0;
-    /* virtual R visitVarStmt(const VarStmt &stmt) = 0; */
+    virtual R visitVarStmt(const VarStmt &stmt) = 0;
     virtual ~StmtVisitor() = default;
 };
 
@@ -78,18 +78,18 @@ public:
  *   var a;        // Declares with implicit nil initializer
  *   var a = 123;  // Declares with explicit initializer
  */
-/* class VarStmt : public Stmt { */
-/* public: */
-/*     VarStmt(const Token &name, const Expr* initializer) */ 
-/*         : name(name), initializer(initializer) {} */
+class VarStmt : public Stmt {
+public:
+    VarStmt(const Token &name, const Expr* initializer) 
+        : name(name), initializer(initializer) {}
 
-/*     void accept(StmtVisitor<void> &visitor) const override { */
-/*         visitor.visitVarStmt(*this); */
-/*     } */
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitVarStmt(*this);
+    }
 
-/*     const Token name;        // The name of the variable being declared */
-/*     const Expr* initializer; // The initializer expression, or nullptr if not initialized */
-/* }; */
+    const Token name;        // The name of the variable being declared
+    const Expr* initializer; // The initializer expression, or nullptr if not initialized
+};
 
 #endif // STMT_H_
 

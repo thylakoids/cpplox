@@ -38,11 +38,7 @@ public:
   std::vector<Stmt*> parse() {
     std::vector<Stmt*> statements;
     while (!isAtEnd()) {
-      try {
-        statements.push_back(statement());
-      } catch (const ParseError &error) {
-        synchronize();
-      }
+      statements.push_back(declaration());
     }
     return statements;
   }
@@ -62,27 +58,27 @@ private:
     }
   }
 
-  /* Stmt* declaration() { */
-  /*   try { */
-  /*     if (match({TokenType::VAR})) return varDeclaration(); */
-  /*     return statement(); */
-  /*   } catch (const ParseError& error) { */
-  /*     synchronize(); */
-  /*     return nullptr; */
-  /*   } */
-  /* } */
+  Stmt* declaration() {
+    try {
+      if (match({TokenType::VAR})) return varDeclaration();
+      return statement();
+    } catch (const ParseError& error) {
+      synchronize();
+      return nullptr;
+    }
+  }
 
-  /* Stmt* varDeclaration() { */
-  /*   Token name = consume(TokenType::IDENTIFIER, "Expect variable name."); */
+  Stmt* varDeclaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
 
-  /*   Expr* initializer = nullptr; */
-  /*   if (match({TokenType::EQUAL})) { */
-  /*     initializer = expression(); */
-  /*   } */
+    Expr* initializer = nullptr;
+    if (match({TokenType::EQUAL})) {
+      initializer = expression();
+    }
 
-  /*   consume(TokenType::SEMICOLON, "Expect ';' after variable declaration."); */
-  /*   return allocate<VarStmt>(name, initializer); */
-  /* } */
+    consume(TokenType::SEMICOLON, "Expect ';' after variable declaration.");
+    return allocate<VarStmt>(name, initializer);
+  }
 
   Stmt* statement() {
     if (match({TokenType::PRINT})) return printStatement();
@@ -163,7 +159,7 @@ private:
 
   Expr *primary() {
     // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression
-    // ")" ;
+    // ")" | IDENTIFIER ;
     if (match({TokenType::FALSE}))
       return allocate<LiteralExpr>(false);
     if (match({TokenType::TRUE}))
@@ -178,6 +174,8 @@ private:
     }
     if (match({TokenType::STRING}))
       return allocate<LiteralExpr>(previous().lexeme);
+    if (match({TokenType::IDENTIFIER}))
+      return allocate<VariableExpr>(previous());
     if (match({TokenType::LEFT_PAREN})) {
       Expr *exprptr = expression();
       consume(TokenType::RIGHT_PAREN, "Expect ')' after expression.");

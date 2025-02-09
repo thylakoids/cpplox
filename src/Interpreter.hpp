@@ -2,17 +2,12 @@
 #define INTERPRETER_H_
 #pragma once
 #include <iostream>
-#include <stdexcept>
 #include "AstPrinter.hpp"
 #include "Expr.hpp"
 #include "Stmt.hpp"
 #include "error.h"
+#include "Environment.hpp"
 
-class RuntimeError : public std::runtime_error {
-public:
-    Token m_token;
-    RuntimeError(const Token& token, const std::string& message) : m_token(token), std::runtime_error(message) {}
-};
 
 class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
 public:
@@ -49,6 +44,10 @@ public:
 
         // Unreachable
         throw RuntimeError(expr.op, "Invalid unary operator");
+    }
+
+    LiteralValue visitVariableExpr(const VariableExpr &expr) override {
+        return m_environment.get(expr.name);
     }
 
     LiteralValue visitBinaryExpr(const BinaryExpr &expr) override {
@@ -116,6 +115,20 @@ public:
         AstPrinter printer;
         std::cout << printer.print(LiteralExpr(value)) << std::endl;
     }
+
+    void visitVarStmt(const VarStmt &stmt) override {
+        LiteralValue value = nullptr; // Set to nil if it isn't explicitly
+                                      // initialized
+        if (stmt.initializer) {
+            value = evaluate(*stmt.initializer);
+        }
+        m_environment.define(stmt.name.lexeme, value);
+    }
+
+
+
+private:
+    Environment m_environment;
 
 private:
     LiteralValue evaluate(const Expr& expr) {

@@ -24,6 +24,10 @@ public:
         return parenthesize(expr.op.lexeme, {&expr.right});
     }
 
+    std::string visitVariableExpr(const VariableExpr &expr) override {
+        return expr.name.lexeme; // Just print the variable name
+    }
+
 private:
     // Helper struct to print different literal types
     struct LiteralPrinter {
