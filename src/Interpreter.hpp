@@ -125,6 +125,11 @@ public:
         m_environment.define(stmt.name.lexeme, value);
     }
 
+    LiteralValue visitAssignExpr(const AssignExpr &expr) override {
+        LiteralValue value = evaluate(expr.value);
+        m_environment.assign(expr.name, value);
+        return value;
+    }
 
 
 private:

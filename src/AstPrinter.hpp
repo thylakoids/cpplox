@@ -28,6 +28,10 @@ public:
         return expr.name.lexeme; // Just print the variable name
     }
 
+    std::string visitAssignExpr(const AssignExpr &expr) override {
+        return parenthesize("assign " + expr.name.lexeme, {&expr.value});
+    }
+
 private:
     // Helper struct to print different literal types
     struct LiteralPrinter {
@@ -39,7 +43,7 @@ private:
           // trim trailing zeros
           s.erase(s.find_last_not_of('0') + 1);
           if (s.back() == '.') {
-              s.push_back('0');
+              s.erase(s.size() - 1);
           }
           return s;
         }

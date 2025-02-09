@@ -98,9 +98,26 @@ private:
   }
 
   Expr *expression() {
-    // expression -> equality
-    return equality();
+    // expression -> assignment ;
+    return assignment();
   };
+
+  Expr *assignment() {
+    // assignment -> IDENTIFIER "=" assignment | equality ;
+    Expr *exprptr = equality();
+    if (match({TokenType::EQUAL})) {
+      Token equals = previous();
+      Expr *value = assignment();
+      if (VariableExpr* ve = dynamic_cast<VariableExpr *>(exprptr)) {
+        Token name = ve->name;
+        return allocate<AssignExpr>(name, *value);
+      }
+      // Don't throw it because the parser isn't in a confused state
+      // where we need to go into panic mode and synchronize.
+      error(equals, "Invalid assignment target.");
+    }
+    return exprptr;
+  }
 
   Expr *equality() {
     // equality -> comparison ( ( "!=" | "==" ) comparison )* ;
