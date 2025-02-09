@@ -14,7 +14,7 @@ public:
     Environment() = default;
 
     void define(const std::string& name, const LiteralValue& value) {
-        m_values.insert({name, value});
+        m_values[name] = value;
     }
 
     LiteralValue get(const Token& name) {
