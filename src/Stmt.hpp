@@ -3,6 +3,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "Token.h"
 #include "Expr.hpp"
 
@@ -10,6 +11,7 @@
 class ExpressionStmt;
 class PrintStmt;
 class VarStmt;
+class BlockStmt;
 
 /**
  * The visitor pattern for statements. Unlike expressions which can return
@@ -23,6 +25,7 @@ public:
     virtual R visitExpressionStmt(const ExpressionStmt &stmt) = 0;
     virtual R visitPrintStmt(const PrintStmt &stmt) = 0;
     virtual R visitVarStmt(const VarStmt &stmt) = 0;
+    virtual R visitBlockStmt(const BlockStmt &stmt) = 0;
     virtual ~StmtVisitor() = default;
 };
 
@@ -89,6 +92,22 @@ public:
 
     const Token name;        // The name of the variable being declared
     const Expr* initializer; // The initializer expression, or nullptr if not initialized
+};
+
+/**
+ * A block statement.
+ * A block is a sequence of statements enclosed in braces.
+ * It creates a new scope for variables.
+ */
+class BlockStmt : public Stmt {
+public:
+    BlockStmt(std::vector<Stmt*> statements) : statements(std::move(statements)) {}
+
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitBlockStmt(*this);
+    }
+
+    const std::vector<Stmt*> statements;
 };
 
 #endif // STMT_H_

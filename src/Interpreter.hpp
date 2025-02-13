@@ -131,6 +131,28 @@ public:
         return value;
     }
 
+    void visitBlockStmt(const BlockStmt &stmt) override {
+        executeBlock(stmt.statements);
+    }
+
+    void executeBlock(const std::vector<Stmt*>& statements) {
+        // error prone
+        Environment previous = m_environment;
+        Environment environment = Environment(&previous);
+        m_environment = environment;
+
+        try {
+            for (const Stmt* statement : statements) {
+                execute(*statement);
+            }
+        } catch (...) {
+            m_environment = previous;
+            throw;
+        }
+
+        m_environment = previous;
+    }
+
 
 private:
     Environment m_environment;
