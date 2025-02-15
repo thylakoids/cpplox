@@ -200,7 +200,7 @@ private:
 
     }
     if (match({TokenType::STRING}))
-      return allocate<LiteralExpr>(previous().lexeme);
+      return allocate<LiteralExpr>(previous().lexeme.substr(1, previous().lexeme.size() - 2));
     if (match({TokenType::IDENTIFIER}))
       return allocate<VariableExpr>(previous());
     if (match({TokenType::LEFT_PAREN})) {
