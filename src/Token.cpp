@@ -78,6 +78,8 @@ std::string tokenTypeToString(TokenType type) {
     return "VAR";
   case TokenType::WHILE:
     return "WHILE";
+  case TokenType::BREAK:
+    return "BREAK";
   case TokenType::END_OF_FILE:
     return "END_OF_FILE";
   }

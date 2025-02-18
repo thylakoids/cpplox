@@ -14,6 +14,7 @@ std::map<string, TokenType> keywords = {
     {"return", TokenType::RETURN}, {"super", TokenType::SUPER},
     {"this", TokenType::THIS},     {"true", TokenType::TRUE},
     {"var", TokenType::VAR},       {"while", TokenType::WHILE},
+    {"break", TokenType::BREAK},
 };
 
 Scanner::Scanner(const string &source) : m_source(source) {}

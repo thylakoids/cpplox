@@ -14,6 +14,7 @@ class PrintStmt;
 class VarStmt;
 class WhileStmt;
 class BlockStmt;
+class BreakStmt;
 
 /**
  * The visitor pattern for statements. Unlike expressions which can return
@@ -30,6 +31,7 @@ public:
     virtual R visitVarStmt(const VarStmt &stmt) = 0;
     virtual R visitWhileStmt(const WhileStmt &stmt) = 0;
     virtual R visitBlockStmt(const BlockStmt &stmt) = 0;
+    virtual R visitBreakStmt(const BreakStmt &stmt) = 0;
     virtual ~StmtVisitor() = default;
 };
 
@@ -138,6 +140,21 @@ public:
     const Expr &condition;
     const Stmt &thenBranch;
     const Stmt *elseBranch; // nullptr if no else branch
+};
+
+/**
+ * A break statement.
+ * Used to exit from the innermost loop.
+ */
+class BreakStmt : public Stmt {
+public:
+    BreakStmt(const Token& keyword) : keyword(keyword) {}
+
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitBreakStmt(*this);
+    }
+
+    const Token keyword;  // The 'break' token, for error reporting
 };
 
 #endif // STMT_H_

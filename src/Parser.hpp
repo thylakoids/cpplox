@@ -16,7 +16,7 @@ public:
 class Parser {
 public:
   [[nodiscard]] explicit Parser(const std::vector<Token> &tokens)
-      : m_tokens(tokens){};
+      : m_tokens(tokens), m_loop_depth(0) {};
 
   // Destructor
   ~Parser() {
@@ -86,7 +86,17 @@ private:
     if (match({TokenType::WHILE})) return whileStatement();
     if (match({TokenType::PRINT})) return printStatement();
     if (match({TokenType::LEFT_BRACE})) return block();
+    if (match({TokenType::BREAK})) return breakStatement();
     return expressionStatement();
+  }
+
+  Stmt* breakStatement() {
+    if (m_loop_depth == 0) {
+      error(previous(), "Cannot use 'break' outside of a loop.");
+    }
+    Token keyword = previous();
+    consume(TokenType::SEMICOLON, "Expect ';' after 'break'.");
+    return allocate<BreakStmt>(keyword);
   }
 
   /*
@@ -119,7 +129,10 @@ private:
       increment = expression();
     }
     consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
+
+    m_loop_depth++;
     Stmt *body = statement();
+    m_loop_depth--;
 
     if (increment != nullptr) {
       body = allocate<BlockStmt>(std::vector<Stmt*>{body, allocate<ExpressionStmt>(*increment)});
@@ -154,7 +167,11 @@ private:
     consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
     Expr* condition = expression();
     consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
+    
+    m_loop_depth++;
     Stmt* body = statement();
+    m_loop_depth--;
+    
     return allocate<WhileStmt>(*condition, *body);
   }
 
@@ -372,4 +389,5 @@ private:
   std::vector<Expr*> m_allocated_exprs;  // Track allocated expressions
   std::vector<Stmt*> m_allocated_stmts;  // Track allocated statements
   int m_current = 0;
+  int m_loop_depth = 0;  // Track loop nesting level
 };

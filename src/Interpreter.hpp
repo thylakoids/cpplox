@@ -8,6 +8,13 @@
 #include "error.h"
 #include "Environment.hpp"
 
+// Custom exception for handling break statements
+class BreakException : public std::exception {
+public:
+    [[nodiscard]] const char* what() const noexcept override {
+        return "Break statement encountered";
+    }
+};
 
 class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
 public:
@@ -51,8 +58,12 @@ public:
     }
 
     void visitWhileStmt(const WhileStmt &stmt) override {
-        while (isTruthy(evaluate(stmt.condition))) {
-            execute(stmt.body);
+        try {
+            while (isTruthy(evaluate(stmt.condition))) {
+                execute(stmt.body);
+            }
+        } catch (const BreakException&) {
+            // Break encountered, exit the loop
         }
     }
 
@@ -177,6 +188,9 @@ public:
         m_environment = previous;
     }
 
+    void visitBreakStmt(const BreakStmt &stmt) override {
+        throw BreakException();
+    }
 
 private:
     Environment m_environment;
