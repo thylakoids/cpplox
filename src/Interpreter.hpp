@@ -50,6 +50,12 @@ public:
         return m_environment.get(expr.name);
     }
 
+    void visitWhileStmt(const WhileStmt &stmt) override {
+        while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body);
+        }
+    }
+
     LiteralValue visitBinaryExpr(const BinaryExpr &expr) override {
         LiteralValue left = evaluate(expr.left);
         LiteralValue right = evaluate(expr.right);
@@ -106,8 +112,26 @@ public:
         throw RuntimeError(expr.op, "Invalid binary operator");
     }
 
+    LiteralValue visitLogicalExpr(const LogicalExpr &expr) override {
+        LiteralValue left = evaluate(expr.left);
+        if (expr.op.lexeme == "or") {
+            if (isTruthy(left)) return left;
+        } else{
+            if (!isTruthy(left)) return left;
+        }
+        return evaluate(expr.right);
+    }
+
     void visitExpressionStmt(const ExpressionStmt &stmt) override {
         evaluate(stmt.expression);
+    }
+
+    void visitIfStmt(const IfStmt &stmt) override {
+        if (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch) {
+            execute(*stmt.elseBranch);
+        }
     }
 
     void visitPrintStmt(const PrintStmt &stmt) override {
@@ -169,6 +193,8 @@ private:
     bool isTruthy(const LiteralValue& value) {
         if (std::holds_alternative<std::nullptr_t>(value)) return false;
         if (std::holds_alternative<bool>(value)) return std::get<bool>(value);
+        if (std::holds_alternative<int>(value)) return std::get<int>(value) != 0;
+        if (std::holds_alternative<double>(value)) return std::get<double>(value) != 0;
         return true;
     }
 

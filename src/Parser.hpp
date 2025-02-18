@@ -81,9 +81,81 @@ private:
   }
 
   Stmt* statement() {
+    if (match({TokenType::FOR})) return forStatement();
+    if (match({TokenType::IF})) return ifStatement();
+    if (match({TokenType::WHILE})) return whileStatement();
     if (match({TokenType::PRINT})) return printStatement();
     if (match({TokenType::LEFT_BRACE})) return block();
     return expressionStatement();
+  }
+
+  /*
+   * for (var i = 0; i < 10; i = i + 1){ print i; }
+   * {
+   *   var i = 0;
+   *   while (i < 10) {
+   *     print i;
+   *     i = i + 1;
+   *   }
+   * }
+   */
+  Stmt *forStatement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'for'.");
+    Stmt *initializer;
+    if (match({TokenType::SEMICOLON})) {
+      initializer = nullptr;
+    } else if (match({TokenType::VAR})) {
+      initializer = varDeclaration();
+    } else {
+      initializer = expressionStatement();
+    }
+    Expr *condition = nullptr;
+    if (!check(TokenType::SEMICOLON)) {
+      condition = expression();
+    }
+    consume(TokenType::SEMICOLON, "Expect ';' after loop condition.");
+    Expr *increment = nullptr;
+    if (!check(TokenType::RIGHT_PAREN)) {
+      increment = expression();
+    }
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
+    Stmt *body = statement();
+
+    if (increment != nullptr) {
+      body = allocate<BlockStmt>(std::vector<Stmt*>{body, allocate<ExpressionStmt>(*increment)});
+    }
+    if (condition == nullptr) {
+      condition = allocate<LiteralExpr>(true);
+    }
+
+    body = allocate<WhileStmt>(*condition, *body);
+
+    if (initializer != nullptr) {
+      body = allocate<BlockStmt>(std::vector<Stmt*>{initializer, body});
+    }
+    return body;
+  }
+
+  Stmt* ifStatement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.");
+    Expr* condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after if condition.");
+
+    Stmt* thenBranch = statement();
+    Stmt* elseBranch = nullptr;
+    if (match({TokenType::ELSE})) {
+      elseBranch = statement();
+    }
+
+    return allocate<IfStmt>(*condition, *thenBranch, elseBranch);
+  }
+
+  Stmt* whileStatement() {
+    consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
+    Expr* condition = expression();
+    consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
+    Stmt* body = statement();
+    return allocate<WhileStmt>(*condition, *body);
   }
 
   Stmt* printStatement() {
@@ -113,8 +185,8 @@ private:
   };
 
   Expr *assignment() {
-    // assignment -> IDENTIFIER "=" assignment | equality ;
-    Expr *exprptr = equality();
+    // assignment -> IDENTIFIER "=" assignment | logic_or ;
+    Expr *exprptr = logic_or();
     if (match({TokenType::EQUAL})) {
       Token equals = previous();
       Expr *value = assignment();
@@ -125,6 +197,28 @@ private:
       // Don't throw it because the parser isn't in a confused state
       // where we need to go into panic mode and synchronize.
       error(equals, "Invalid assignment target.");
+    }
+    return exprptr;
+  }
+
+  Expr *logic_or() {
+    // logic_or -> logic_and ( "or" logic_and )* ;
+    Expr *exprptr = logic_and();
+    while (match({TokenType::OR})) {
+      Token op = previous();
+      Expr *right = logic_and();
+      exprptr = allocate<LogicalExpr>(*exprptr, op, *right);
+    }
+    return exprptr;
+  }
+
+  Expr *logic_and() {
+    // logic_and      → equality ( "and" equality )* ;
+    Expr *exprptr = equality();
+    while(match({TokenType::AND})) {
+      Token op = previous();
+      Expr *right = equality();
+      exprptr = allocate<LogicalExpr>(*exprptr, op, *right);
     }
     return exprptr;
   }

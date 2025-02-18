@@ -8,6 +8,7 @@
 
 // Forward declaration
 class BinaryExpr;
+class LogicalExpr;
 class UnaryExpr;
 class LiteralExpr;
 class GroupingExpr;
@@ -23,6 +24,7 @@ template <typename R>
 class ExprVisitor {
 public:
     virtual R visitBinaryExpr(const BinaryExpr &expr) = 0;
+    virtual R visitLogicalExpr(const LogicalExpr &expr) = 0;
     virtual R visitUnaryExpr(const UnaryExpr &expr) = 0;
     virtual R visitLiteralExpr(const LiteralExpr &expr) = 0;
     virtual R visitGroupingExpr(const GroupingExpr &expr) = 0;
@@ -51,6 +53,25 @@ public:
 
     LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
         return visitor.visitBinaryExpr(*this);
+    }
+
+    const Expr &left;
+    const Token op;
+    const Expr &right;
+};
+
+// Binary expression
+class LogicalExpr : public Expr {
+public:
+    LogicalExpr(const Expr &left, const Token &op, const Expr &right)
+        : left(left), op(op), right(right) {}
+
+    std::string accept(ExprVisitor<std::string> &visitor) const override {
+        return visitor.visitLogicalExpr(*this);
+    }
+
+    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+        return visitor.visitLogicalExpr(*this);
     }
 
     const Expr &left;

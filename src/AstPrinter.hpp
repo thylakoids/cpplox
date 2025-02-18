@@ -12,6 +12,10 @@ public:
         return parenthesize(expr.op.lexeme, {&expr.left, &expr.right});
     }
 
+    std::string visitLogicalExpr(const LogicalExpr &expr) override {
+        return parenthesize(expr.op.lexeme, {&expr.left, &expr.right});
+    }
+
     std::string visitGroupingExpr(const GroupingExpr &expr) override {
         return parenthesize("group", {&expr.expr});
     }

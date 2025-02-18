@@ -9,8 +9,10 @@
 
 // Forward declarations of all statement types we'll need
 class ExpressionStmt;
+class IfStmt;
 class PrintStmt;
 class VarStmt;
+class WhileStmt;
 class BlockStmt;
 
 /**
@@ -23,8 +25,10 @@ template <typename R>
 class StmtVisitor {
 public:
     virtual R visitExpressionStmt(const ExpressionStmt &stmt) = 0;
+    virtual R visitIfStmt(const IfStmt &stmt) = 0;
     virtual R visitPrintStmt(const PrintStmt &stmt) = 0;
     virtual R visitVarStmt(const VarStmt &stmt) = 0;
+    virtual R visitWhileStmt(const WhileStmt &stmt) = 0;
     virtual R visitBlockStmt(const BlockStmt &stmt) = 0;
     virtual ~StmtVisitor() = default;
 };
@@ -94,6 +98,18 @@ public:
     const Expr* initializer; // The initializer expression, or nullptr if not initialized
 };
 
+class WhileStmt : public Stmt {
+public:
+    WhileStmt(const Expr &condition, const Stmt &body) : condition(condition), body(body) {}
+
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitWhileStmt(*this);
+    }
+
+    const Expr &condition;
+    const Stmt &body;
+};
+
 /**
  * A block statement.
  * A block is a sequence of statements enclosed in braces.
@@ -108,6 +124,20 @@ public:
     }
 
     const std::vector<Stmt*> statements;
+};
+
+class IfStmt : public Stmt {
+public:
+    IfStmt(const Expr &condition, const Stmt &thenBranch, const Stmt *elseBranch)
+        : condition(condition), thenBranch(thenBranch), elseBranch(elseBranch) {}
+
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitIfStmt(*this);
+    }
+
+    const Expr &condition;
+    const Stmt &thenBranch;
+    const Stmt *elseBranch; // nullptr if no else branch
 };
 
 #endif // STMT_H_
