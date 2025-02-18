@@ -15,6 +15,7 @@ class VarStmt;
 class WhileStmt;
 class BlockStmt;
 class BreakStmt;
+class ContinueStmt;
 
 /**
  * The visitor pattern for statements. Unlike expressions which can return
@@ -32,6 +33,7 @@ public:
     virtual R visitWhileStmt(const WhileStmt &stmt) = 0;
     virtual R visitBlockStmt(const BlockStmt &stmt) = 0;
     virtual R visitBreakStmt(const BreakStmt &stmt) = 0;
+    virtual R visitContinueStmt(const ContinueStmt &stmt) = 0;
     virtual ~StmtVisitor() = default;
 };
 
@@ -155,6 +157,21 @@ public:
     }
 
     const Token keyword;  // The 'break' token, for error reporting
+};
+
+/**
+ * A continue statement.
+ * Used to skip to the next iteration of the innermost loop.
+ */
+class ContinueStmt : public Stmt {
+public:
+    ContinueStmt(const Token& keyword) : keyword(keyword) {}
+
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitContinueStmt(*this);
+    }
+
+    const Token keyword;  // The 'continue' token, for error reporting
 };
 
 #endif // STMT_H_

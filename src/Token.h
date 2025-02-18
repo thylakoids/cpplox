@@ -54,6 +54,7 @@ enum class TokenType {
   VAR,
   WHILE,
   BREAK,
+  CONTINUE,
 
   END_OF_FILE
 };

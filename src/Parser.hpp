@@ -87,6 +87,7 @@ private:
     if (match({TokenType::PRINT})) return printStatement();
     if (match({TokenType::LEFT_BRACE})) return block();
     if (match({TokenType::BREAK})) return breakStatement();
+    if (match({TokenType::CONTINUE})) return continueStatement();
     return expressionStatement();
   }
 
@@ -97,6 +98,15 @@ private:
     Token keyword = previous();
     consume(TokenType::SEMICOLON, "Expect ';' after 'break'.");
     return allocate<BreakStmt>(keyword);
+  }
+
+  Stmt* continueStatement() {
+    if (m_loop_depth == 0) {
+      error(previous(), "Cannot use 'continue' outside of a loop.");
+    }
+    Token keyword = previous();
+    consume(TokenType::SEMICOLON, "Expect ';' after 'continue'.");
+    return allocate<ContinueStmt>(keyword);
   }
 
   /*

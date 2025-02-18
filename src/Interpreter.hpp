@@ -16,6 +16,14 @@ public:
     }
 };
 
+// Custom exception for handling continue statements
+class ContinueException : public std::exception {
+public:
+    [[nodiscard]] const char* what() const noexcept override {
+        return "Continue statement encountered";
+    }
+};
+
 class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
 public:
     void interpret(const std::vector<Stmt*>& statements) {
@@ -60,7 +68,12 @@ public:
     void visitWhileStmt(const WhileStmt &stmt) override {
         try {
             while (isTruthy(evaluate(stmt.condition))) {
-                execute(stmt.body);
+                try {
+                    execute(stmt.body);
+                } catch (const ContinueException&) {
+                    // Continue encountered, skip to next iteration
+                    continue;
+                }
             }
         } catch (const BreakException&) {
             // Break encountered, exit the loop
@@ -190,6 +203,10 @@ public:
 
     void visitBreakStmt(const BreakStmt &stmt) override {
         throw BreakException();
+    }
+
+    void visitContinueStmt(const ContinueStmt &stmt) override {
+        throw ContinueException();
     }
 
 private:
