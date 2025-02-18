@@ -106,7 +106,7 @@ private:
     }
     Token keyword = previous();
     consume(TokenType::SEMICOLON, "Expect ';' after 'continue'.");
-    return allocate<ContinueStmt>(keyword);
+    return allocate<ContinueStmt>(keyword, m_continue_increment);
   }
 
   /*
@@ -141,12 +141,16 @@ private:
     consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
 
     m_loop_depth++;
+    // Store the increment expression to use in any continue statements
+    m_continue_increment = increment;
     Stmt *body = statement();
+    m_continue_increment = nullptr;
     m_loop_depth--;
 
     if (increment != nullptr) {
       body = allocate<BlockStmt>(std::vector<Stmt*>{body, allocate<ExpressionStmt>(*increment)});
     }
+
     if (condition == nullptr) {
       condition = allocate<LiteralExpr>(true);
     }
@@ -400,4 +404,5 @@ private:
   std::vector<Stmt*> m_allocated_stmts;  // Track allocated statements
   int m_current = 0;
   int m_loop_depth = 0;  // Track loop nesting level
+  Expr* m_continue_increment = nullptr;  // Current for-loop increment for continue statements
 };

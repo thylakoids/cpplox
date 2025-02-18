@@ -162,16 +162,19 @@ public:
 /**
  * A continue statement.
  * Used to skip to the next iteration of the innermost loop.
+ * May include an increment expression for desugared for loops.
  */
 class ContinueStmt : public Stmt {
 public:
-    ContinueStmt(const Token& keyword) : keyword(keyword) {}
+    ContinueStmt(const Token& keyword, const Expr* increment = nullptr) 
+        : keyword(keyword), increment(increment) {}
 
     void accept(StmtVisitor<void> &visitor) const override {
         visitor.visitContinueStmt(*this);
     }
 
     const Token keyword;  // The 'continue' token, for error reporting
+    const Expr* increment;  // Optional increment expression for for-loops
 };
 
 #endif // STMT_H_

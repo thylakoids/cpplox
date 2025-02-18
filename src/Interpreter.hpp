@@ -206,6 +206,9 @@ public:
     }
 
     void visitContinueStmt(const ContinueStmt &stmt) override {
+        if (stmt.increment) {
+            evaluate(*stmt.increment);  // Execute increment before continuing
+        }
         throw ContinueException();
     }
 
