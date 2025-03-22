@@ -21,7 +21,7 @@ add_executable(${PROJECT_NAME}
     src/Interpreter.hpp
 )
 
-add_executable(test_expr 
+add_executable(test_expr
     src/test_expr.cpp
 )
 

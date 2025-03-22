@@ -23,14 +23,14 @@ using LiteralValue = std::variant<std::string, int, double, bool, std::nullptr_t
 template <typename R>
 class ExprVisitor {
 public:
-    virtual R visitBinaryExpr(const BinaryExpr &expr) = 0;
-    virtual R visitLogicalExpr(const LogicalExpr &expr) = 0;
-    virtual R visitUnaryExpr(const UnaryExpr &expr) = 0;
-    virtual R visitLiteralExpr(const LiteralExpr &expr) = 0;
-    virtual R visitGroupingExpr(const GroupingExpr &expr) = 0;
-    virtual R visitVariableExpr(const VariableExpr &expr) = 0;
-    virtual R visitAssignExpr(const AssignExpr &expr) = 0;
-    virtual ~ExprVisitor() = default;
+  virtual R visitBinaryExpr(const BinaryExpr &expr) = 0;
+  virtual R visitLogicalExpr(const LogicalExpr &expr) = 0;
+  virtual R visitUnaryExpr(const UnaryExpr &expr) = 0;
+  virtual R visitLiteralExpr(const LiteralExpr &expr) = 0;
+  virtual R visitGroupingExpr(const GroupingExpr &expr) = 0;
+  virtual R visitVariableExpr(const VariableExpr &expr) = 0;
+  virtual R visitAssignExpr(const AssignExpr &expr) = 0;
+  virtual ~ExprVisitor() = default;
 };
 
 // Base Expr class
