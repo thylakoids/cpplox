@@ -306,7 +306,35 @@ private:
       Expr *right = unary();
       return allocate<UnaryExpr>(op, *right);
     }
-    return primary();
+    return call();
+  }
+
+  Expr *call() {
+    // call -> primary ( "(" arguments? ")" )* ;
+    Expr *exprptr = primary();
+    while (true) {
+      if (match({TokenType::LEFT_PAREN})) {
+        exprptr = finishCall(exprptr);
+      } else {
+        break;
+      }
+    }
+    return exprptr;
+  }
+
+  Expr *finishCall(Expr *callee) {
+    // arguments -> expression ( "," expression )* ;
+    std::vector<Expr *> arguments;
+    if (!check(TokenType::RIGHT_PAREN)) {
+      do {
+        if (arguments.size() >= 255) {
+          error(peek(), "Cannot have more than 255 arguments.");
+        }
+        arguments.push_back(expression());
+      } while (match({TokenType::COMMA}));
+    }
+    Token paren = consume(TokenType::RIGHT_PAREN, "Expect ')' after arguments.");
+    return allocate<CallExpr>(*callee, paren, arguments);
   }
 
   Expr *primary() {

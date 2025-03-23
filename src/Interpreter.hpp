@@ -7,6 +7,7 @@
 #include "Stmt.hpp"
 #include "error.h"
 #include "Environment.hpp"
+#include "NativeFunctions.hpp"
 
 // Custom exception for handling break statements
 class BreakException : public std::exception {
@@ -26,6 +27,13 @@ public:
 
 class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
 public:
+    Interpreter() {
+        // Register native functions in the global environment
+        for (const auto& [name, function] : createNativeFunctions()) {
+            m_environment.define(name, function);
+        }
+    }
+
     void interpret(const std::vector<Stmt*>& statements) {
         try {
             for (const Stmt* stmt : statements) {
@@ -134,6 +142,27 @@ public:
 
         // Unreachable
         throw RuntimeError(expr.op, "Invalid binary operator");
+    }
+
+    LiteralValue visitCallExpr(const CallExpr &expr) override {
+        LiteralValue callee = evaluate(expr.callee);
+
+        std::vector<LiteralValue> arguments;
+        for (const Expr* argument : expr.arguments) {
+            arguments.push_back(evaluate(*argument));
+        }
+
+        if (!std::holds_alternative<std::shared_ptr<LoxCallable>>(callee)) {
+            throw RuntimeError(expr.paren, "Can only call functions and classes.");
+        }
+
+        std::shared_ptr<LoxCallable> function = std::get<std::shared_ptr<LoxCallable>>(callee);
+        if (arguments.size() != function->arity()) {
+            throw RuntimeError(expr.paren, "Expected " + std::to_string(function->arity()) +
+                " arguments but got " + std::to_string(arguments.size()) + ".");
+        }
+
+        return function->call(*this, arguments);
     }
 
     LiteralValue visitLogicalExpr(const LogicalExpr &expr) override {

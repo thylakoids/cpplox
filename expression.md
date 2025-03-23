@@ -21,6 +21,7 @@ Comparison | > >= < <=  | Left
 Term       | - +        | Left
 Factor     | / *        | Left
 Unary      | ! -        | Right
+Call       | ()         | Left
 
 ### Stratified Grammar (by precedence)
 expression     → equality

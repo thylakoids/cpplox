@@ -5,7 +5,6 @@
 #include <vector>
 #include "Scanner.h"
 #include "Parser.hpp"
-#include "AstPrinter.hpp"
 #include "error.h"
 #include "Interpreter.hpp"
 

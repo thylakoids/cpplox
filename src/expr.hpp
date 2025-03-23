@@ -4,8 +4,11 @@
 
 #include <string>
 #include <variant>
+#include <memory>
 #include "Token.h"
+#include <vector>
 
+class LoxCallable;
 // Forward declaration
 class BinaryExpr;
 class LogicalExpr;
@@ -18,7 +21,7 @@ class CallExpr;
 
 // Define literal value type that can hold any kind of literal
 // todo: int is redundant
-using LiteralValue = std::variant<std::string, int, double, bool, std::nullptr_t>;
+using LiteralValue = std::variant<std::string, int, double, bool, std::nullptr_t, std::shared_ptr<LoxCallable>>;
 
 // Visitor pattern
 template <typename R>
@@ -163,5 +166,24 @@ public:
     const Token name;
     const Expr &value;
 };
+
+class CallExpr : public Expr {
+public:
+  CallExpr(const Expr &callee, const Token &paren, const std::vector<Expr *> &arguments)
+      : callee(callee), paren(paren), arguments(std::move(arguments)) {}
+
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitCallExpr(*this);
+  }
+
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitCallExpr(*this);
+  }
+
+  const Expr &callee;
+  const Token paren; // Use token location for error reporting
+  const std::vector<Expr *> arguments;
+};
+
 
 #endif // EXPR_H_

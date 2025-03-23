@@ -1,6 +1,9 @@
 #pragma once
 #include "Expr.hpp"
+#include <initializer_list>
 #include <sstream>
+#include <memory>
+#include "LoxCallable.hpp"
 
 class AstPrinter : public ExprVisitor<std::string> {
 public:
@@ -36,6 +39,10 @@ public:
         return parenthesize("assign " + expr.name.lexeme, {&expr.value});
     }
 
+    std::string visitCallExpr(const CallExpr &expr) override {
+        return parenthesize("call " + expr.callee.accept(*this), expr.arguments);
+    }
+
 private:
     // Helper struct to print different literal types
     struct LiteralPrinter {
@@ -52,9 +59,13 @@ private:
           return s;
         }
         std::string operator()(std::nullptr_t) const { return "nil"; }
+        std::string operator()(const std::shared_ptr<LoxCallable>& callable) const {
+            return callable->toString();
+        }
     };
 
-    std::string parenthesize(const std::string& name, const std::initializer_list<const Expr*>& exprs) {
+    template<typename Container>
+    std::string parenthesize(const std::string& name, const Container& exprs) {
         std::stringstream builder;
 
         builder << "(" << name;
@@ -65,5 +76,10 @@ private:
         builder << ")";
 
         return builder.str();
+    }
+
+    // Overload for initializer_list
+    std::string parenthesize(const std::string& name, const std::initializer_list<const Expr*>& exprs) {
+        return parenthesize<std::initializer_list<const Expr*>>(name, exprs);
     }
 };
