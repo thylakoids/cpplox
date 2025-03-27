@@ -13,11 +13,6 @@ class Environment {
 public:
     Environment() = default;
     explicit Environment(Environment* enclosing) : enclosing(enclosing) {}
-    ~Environment() = default;
-    Environment(const Environment&) = delete;
-    Environment& operator=(const Environment&) = delete;
-    Environment operator=(Environment&&) = delete;
-    Environment(Environment&&) = delete;
 
     void define(const std::string& name, const LiteralValue& value) {
         m_values[name] = value;
@@ -46,6 +41,7 @@ public:
     }
 
 public:
+    // We don't onw the environment, it's not our responsibility to delete it
     Environment* enclosing = nullptr;
 
 private:

@@ -31,19 +31,14 @@ public:
 
 class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
 public:
-    Interpreter() : m_envptr(new Environment()) {
+    Interpreter(){
+        m_globalenv = Environment();
+        m_envptr = &m_globalenv;
         // Register native functions in the global environment
         for (const auto& [name, function] : createNativeFunctions()) {
             m_envptr->define(name, function);
         }
     }
-    ~Interpreter() {
-        delete m_envptr;
-    }
-    Interpreter(const Interpreter&) = delete;
-    Interpreter& operator=(const Interpreter&) = delete;
-    Interpreter(Interpreter&&) = delete;
-    Interpreter& operator=(Interpreter&&) = delete;
 
     Environment* getEnvironment() const {
         return m_envptr;
@@ -262,6 +257,7 @@ public:
     }
 
 private:
+    Environment m_globalenv;
     Environment* m_envptr;
 
 private:
