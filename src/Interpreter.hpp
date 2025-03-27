@@ -1,13 +1,17 @@
 #ifndef INTERPRETER_H_
 #define INTERPRETER_H_
 #pragma once
+
 #include <iostream>
-#include "AstPrinter.hpp"
+#include <memory>
 #include "Expr.hpp"
 #include "Stmt.hpp"
 #include "error.h"
+#include "LoxFunction.h"
+#include "AstPrinter.hpp"
 #include "Environment.hpp"
 #include "NativeFunctions.hpp"
+
 
 // Custom exception for handling break statements
 class BreakException : public std::exception {
@@ -27,11 +31,22 @@ public:
 
 class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
 public:
-    Interpreter() {
+    Interpreter() : m_envptr(new Environment()) {
         // Register native functions in the global environment
         for (const auto& [name, function] : createNativeFunctions()) {
-            m_environment.define(name, function);
+            m_envptr->define(name, function);
         }
+    }
+    ~Interpreter() {
+        delete m_envptr;
+    }
+    Interpreter(const Interpreter&) = delete;
+    Interpreter& operator=(const Interpreter&) = delete;
+    Interpreter(Interpreter&&) = delete;
+    Interpreter& operator=(Interpreter&&) = delete;
+
+    Environment* getEnvironment() const {
+        return m_envptr;
     }
 
     void interpret(const std::vector<Stmt*>& statements) {
@@ -70,7 +85,7 @@ public:
     }
 
     LiteralValue visitVariableExpr(const VariableExpr &expr) override {
-        return m_environment.get(expr.name);
+        return m_envptr->get(expr.name);
     }
 
     void visitWhileStmt(const WhileStmt &stmt) override {
@@ -179,6 +194,11 @@ public:
         evaluate(stmt.expression);
     }
 
+    void visitFuntionStmt(const FunctionStmt &stmt) override {
+        std::shared_ptr<LoxFunction> function = std::make_shared<LoxFunction>(&stmt);
+        m_envptr->define(stmt.name.lexeme, function);
+    }
+
     void visitIfStmt(const IfStmt &stmt) override {
         if (isTruthy(evaluate(stmt.condition))) {
             execute(stmt.thenBranch);
@@ -199,35 +219,35 @@ public:
         if (stmt.initializer) {
             value = evaluate(*stmt.initializer);
         }
-        m_environment.define(stmt.name.lexeme, value);
+        m_envptr->define(stmt.name.lexeme, value);
     }
 
     LiteralValue visitAssignExpr(const AssignExpr &expr) override {
         LiteralValue value = evaluate(expr.value);
-        m_environment.assign(expr.name, value);
+        m_envptr->assign(expr.name, value);
         return value;
     }
 
     void visitBlockStmt(const BlockStmt &stmt) override {
-        executeBlock(stmt.statements);
+        auto env = Environment(m_envptr);
+        executeBlock(stmt.statements, &env);
     }
 
-    void executeBlock(const std::vector<Stmt*>& statements) {
+    void executeBlock(const std::vector<Stmt*>& statements, Environment* env) {
         // error prone
-        Environment previous = m_environment;
-        Environment environment = Environment(&previous);
-        m_environment = environment;
+        Environment* previous = m_envptr;
+        m_envptr = env;
 
         try {
             for (const Stmt* statement : statements) {
                 execute(*statement);
             }
         } catch (...) {
-            m_environment = previous;
+            m_envptr = previous;
             throw;
         }
 
-        m_environment = previous;
+        m_envptr = previous;
     }
 
     void visitBreakStmt(const BreakStmt &stmt) override {
@@ -242,7 +262,7 @@ public:
     }
 
 private:
-    Environment m_environment;
+    Environment* m_envptr;
 
 private:
     LiteralValue evaluate(const Expr& expr) {

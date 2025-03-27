@@ -18,6 +18,7 @@ add_executable(${PROJECT_NAME}
     src/Scanner.cpp
     src/Token.cpp
     src/error.cpp
+    src/LoxFunction.cpp
 )
 
 add_executable(test_expr

@@ -12,7 +12,12 @@ class Environment;
 class Environment {
 public:
     Environment() = default;
-    Environment(Environment* enclosing) : enclosing(enclosing) {}
+    explicit Environment(Environment* enclosing) : enclosing(enclosing) {}
+    ~Environment() = default;
+    Environment(const Environment&) = delete;
+    Environment& operator=(const Environment&) = delete;
+    Environment operator=(Environment&&) = delete;
+    Environment(Environment&&) = delete;
 
     void define(const std::string& name, const LiteralValue& value) {
         m_values[name] = value;
