@@ -19,6 +19,8 @@ add_executable(${PROJECT_NAME}
     src/Token.cpp
     src/error.cpp
     src/LoxFunction.cpp
+    src/Interpreter.cpp
+    src/EnvironmentPrinter.cpp
 )
 
 add_executable(test_expr

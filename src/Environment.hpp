@@ -6,10 +6,12 @@
 #include <unordered_map>
 #include "Expr.hpp"
 #include "error.h"
- 
-class Environment;
+#include "EnvironmentPrinter.h"
 
 class Environment {
+    // Make EnvironmentPrinter a friend class so it can access m_values and enclosing
+    friend void formatEnvironmentRecursive(std::stringstream& ss, const Environment* env, size_t depth);
+
 public:
     Environment() = default;
     explicit Environment(Environment* enclosing) : enclosing(enclosing) {}
@@ -40,8 +42,13 @@ public:
         throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
     }
 
+    // Returns a string representation of the environment chain by calling the helper
+    std::string toString() const {
+        return formatEnvironment(*this);
+    }
+
 public:
-    // We don't onw the environment, it's not our responsibility to delete it
+    // We don't own the environment, it's not our responsibility to delete it
     Environment* enclosing = nullptr;
 
 private:
