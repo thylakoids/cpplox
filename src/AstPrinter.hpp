@@ -3,7 +3,7 @@
 #include <initializer_list>
 #include <sstream>
 #include <memory>
-#include "LoxCallable.hpp"
+#include "LoxCallable.h"
 
 class AstPrinter : public ExprVisitor<std::string> {
 public:

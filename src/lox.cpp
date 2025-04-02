@@ -6,7 +6,7 @@
 #include "Scanner.h"
 #include "Parser.hpp"
 #include "error.h"
-#include "Interpreter.hpp"
+#include "Interpreter.h"
 
 using std::cout;
 using std::endl;

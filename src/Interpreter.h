@@ -1,0 +1,86 @@
+#ifndef INTERPRETER_H_
+#define INTERPRETER_H_
+#pragma once
+
+#include <memory>
+#include <vector>
+#include "Expr.hpp"
+#include "Stmt.hpp"
+#include "Environment.hpp"
+
+// Custom exception for handling break statements
+class BreakException : public std::exception {
+public:
+    [[nodiscard]] const char* what() const noexcept override {
+        return "Break statement encountered";
+    }
+};
+
+class ReturnException : public std::exception {
+public:
+    explicit ReturnException(LiteralValue value) : m_value(std::move(value)) {}
+
+    [[nodiscard]] const char* what() const noexcept override {
+        return "Return statement encountered";
+    }
+
+    [[nodiscard]] LiteralValue getValue() const {
+        return m_value;
+    }
+private:
+    LiteralValue m_value;
+};
+
+// Custom exception for handling continue statements
+class ContinueException : public std::exception {
+public:
+    [[nodiscard]] const char* what() const noexcept override {
+        return "Continue statement encountered";
+    }
+};
+
+class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
+public:
+    Interpreter();
+    Environment* getEnvironment() const;
+    void interpret(const std::vector<Stmt*>& statements);
+
+    // ExprVisitor method implementations
+    LiteralValue visitLiteralExpr(const LiteralExpr &expr) override;
+    LiteralValue visitGroupingExpr(const GroupingExpr &expr) override;
+    LiteralValue visitUnaryExpr(const UnaryExpr &expr) override;
+    LiteralValue visitVariableExpr(const VariableExpr &expr) override;
+    LiteralValue visitBinaryExpr(const BinaryExpr &expr) override;
+    LiteralValue visitCallExpr(const CallExpr &expr) override;
+    LiteralValue visitLogicalExpr(const LogicalExpr &expr) override;
+    LiteralValue visitAssignExpr(const AssignExpr &expr) override;
+
+    // StmtVisitor method implementations
+    void visitExpressionStmt(const ExpressionStmt &stmt) override;
+    void visitFunctionStmt(const FunctionStmt &stmt) override;
+    void visitIfStmt(const IfStmt &stmt) override;
+    void visitPrintStmt(const PrintStmt &stmt) override;
+    void visitVarStmt(const VarStmt &stmt) override;
+    void visitBlockStmt(const BlockStmt &stmt) override;
+    void visitWhileStmt(const WhileStmt &stmt) override;
+    void visitBreakStmt(const BreakStmt &stmt) override;
+    void visitContinueStmt(const ContinueStmt &stmt) override;
+    void visitReturnStmt(const ReturnStmt &stmt) override;
+
+    // Public block execution method (needed by LoxFunction)
+    void executeBlock(const std::vector<Stmt*>& statements, std::shared_ptr<Environment> env);
+
+private:
+    std::shared_ptr<Environment> m_envptr;
+
+    LiteralValue evaluate(const Expr& expr);
+    void execute(const Stmt& stmt);
+    bool isTruthy(const LiteralValue& value);
+    bool isEqual(const LiteralValue& a, const LiteralValue& b);
+    bool isNumber(const LiteralValue& value);
+    double getNumberValue(const LiteralValue& value);
+    void checkNumberOperand(const Token& op, const LiteralValue& operand);
+    void checkNumberOperand(const Token& op, const LiteralValue& left, const LiteralValue& right);
+};
+
+#endif // INTERPRETER_H_ 

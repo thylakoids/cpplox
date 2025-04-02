@@ -16,6 +16,7 @@ class WhileStmt;
 class BlockStmt;
 class BreakStmt;
 class ContinueStmt;
+class ReturnStmt;
 
 /**
  * The visitor pattern for statements. Unlike expressions which can return
@@ -27,7 +28,7 @@ template <typename R>
 class StmtVisitor {
 public:
     virtual R visitExpressionStmt(const ExpressionStmt &stmt) = 0;
-    virtual R visitFuntionStmt(const FunctionStmt &stmt) = 0;
+    virtual R visitFunctionStmt(const FunctionStmt &stmt) = 0;
     virtual R visitIfStmt(const IfStmt &stmt) = 0;
     virtual R visitPrintStmt(const PrintStmt &stmt) = 0;
     virtual R visitVarStmt(const VarStmt &stmt) = 0;
@@ -35,6 +36,7 @@ public:
     virtual R visitBlockStmt(const BlockStmt &stmt) = 0;
     virtual R visitBreakStmt(const BreakStmt &stmt) = 0;
     virtual R visitContinueStmt(const ContinueStmt &stmt) = 0;
+    virtual R visitReturnStmt(const ReturnStmt &stmt) = 0;
     virtual ~StmtVisitor() = default;
 };
 
@@ -122,6 +124,8 @@ public:
  */
 class BlockStmt : public Stmt {
 public:
+    // Pass by value + std::move pattern: efficiently handles both temporaries and persistent objects
+    // while clearly indicating ownership transfer of statements to this Block
     BlockStmt(std::vector<Stmt*> statements) : statements(std::move(statements)) {}
 
     void accept(StmtVisitor<void> &visitor) const override {
@@ -184,7 +188,7 @@ public:
         : name(name), params(params), body(body) {}
 
     void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitFuntionStmt(*this);
+        visitor.visitFunctionStmt(*this);
     }
 
     const Token name;
@@ -192,5 +196,17 @@ public:
     const std::vector<Stmt*> body;
 };
 
-#endif // STMT_H_
+class ReturnStmt : public Stmt {
+public:
+    ReturnStmt(const Token &keyword, const Expr* value) : keyword(keyword), value(value) {}
 
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitReturnStmt(*this);
+    }
+
+    const Token keyword;
+    const Expr* value; // The value to return, or nullptr if no return value
+};
+
+
+#endif // STMT_H_

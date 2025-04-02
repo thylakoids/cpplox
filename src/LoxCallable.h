@@ -18,7 +18,7 @@ public:
 
     // Executes the function with the given arguments
     virtual LiteralValue call(Interpreter& interpreter,
-                             const std::vector<LiteralValue>& arguments) const = 0;
+                             const std::vector<LiteralValue>& arguments) = 0;
 
     // String representation of the callable
     virtual std::string toString() const = 0;

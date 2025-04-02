@@ -108,6 +108,7 @@ private:
     if (match({TokenType::LEFT_BRACE})) return block();
     if (match({TokenType::BREAK})) return breakStatement();
     if (match({TokenType::CONTINUE})) return continueStatement();
+    if (match({TokenType::RETURN})) return returnStatement();
     return expressionStatement();
   }
 
@@ -201,11 +202,11 @@ private:
     consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
     Expr* condition = expression();
     consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
-    
+
     m_loop_depth++;
     Stmt* body = statement();
     m_loop_depth--;
-    
+
     return allocate<WhileStmt>(*condition, *body);
   }
 
@@ -213,6 +214,16 @@ private:
     Expr* value = expression();
     consume(TokenType::SEMICOLON, "Expect ';' after value.");
     return allocate<PrintStmt>(*value);
+  }
+
+  Stmt* returnStatement() {
+    Token keyword = previous();
+    Expr* value = nullptr;
+    if(!check(TokenType::SEMICOLON)) {
+      value = expression();
+    }
+    consume(TokenType::SEMICOLON, "Expect ';' after return value.");
+    return allocate<ReturnStmt>(keyword, value);
   }
 
   Stmt* expressionStatement() {

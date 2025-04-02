@@ -170,7 +170,7 @@ public:
 class CallExpr : public Expr {
 public:
   CallExpr(const Expr &callee, const Token &paren, const std::vector<Expr *> &arguments)
-      : callee(callee), paren(paren), arguments(std::move(arguments)) {}
+      : callee(callee), paren(paren), arguments(arguments) {}
 
   std::string accept(ExprVisitor<std::string> &visitor) const override {
     return visitor.visitCallExpr(*this);
