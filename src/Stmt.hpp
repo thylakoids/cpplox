@@ -107,7 +107,8 @@ public:
 
 class WhileStmt : public Stmt {
 public:
-    WhileStmt(const Expr &condition, const Stmt &body) : condition(condition), body(body) {}
+    WhileStmt(const Expr &condition, const Stmt &body, const Stmt* increment = nullptr):
+        condition(condition), body(body),  increment(increment){}
 
     void accept(StmtVisitor<void> &visitor) const override {
         visitor.visitWhileStmt(*this);
@@ -115,6 +116,7 @@ public:
 
     const Expr &condition;
     const Stmt &body;
+    const Stmt* increment; // for-loops
 };
 
 /**
@@ -164,22 +166,15 @@ public:
     const Token keyword;  // The 'break' token, for error reporting
 };
 
-/**
- * A continue statement.
- * Used to skip to the next iteration of the innermost loop.
- * May include an increment expression for desugared for loops.
- */
 class ContinueStmt : public Stmt {
 public:
-    ContinueStmt(const Token& keyword, const Expr* increment = nullptr) 
-        : keyword(keyword), increment(increment) {}
+    ContinueStmt(const Token& keyword, const Expr* increment = nullptr) : keyword(keyword) {}
 
     void accept(StmtVisitor<void> &visitor) const override {
         visitor.visitContinueStmt(*this);
     }
 
     const Token keyword;  // The 'continue' token, for error reporting
-    const Expr* increment;  // Optional increment expression for for-loops
 };
 
 class FunctionStmt : public Stmt {

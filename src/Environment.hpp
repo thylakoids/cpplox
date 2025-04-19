@@ -29,12 +29,15 @@ public:
         throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
     }
 
-    LiteralValue getAt(int distance, const std::string& name) {
+    LiteralValue getAt(int distance, const Token& name) {
         Environment* environment = this;
         for (int i = 0; i < distance; i++) {
             environment = environment->enclosing; 
         }
-        return environment->m_values.at(name);
+        if (environment->m_values.find(name.lexeme) != environment->m_values.end()) {
+            return environment->m_values.at(name.lexeme);
+        }
+        throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
     }
 
     void assign(const Token& name, const LiteralValue& value) {

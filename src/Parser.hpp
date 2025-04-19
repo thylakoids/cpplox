@@ -16,7 +16,7 @@ public:
 class Parser {
 public:
   [[nodiscard]] explicit Parser(const std::vector<Token> &tokens)
-      : m_tokens(tokens), m_loop_depth(0) {};
+      : m_tokens(tokens) {};
 
   // Destructor
   ~Parser() {
@@ -113,31 +113,26 @@ private:
   }
 
   Stmt* breakStatement() {
-    if (m_loop_depth == 0) {
-      error(previous(), "Cannot use 'break' outside of a loop.");
-    }
     Token keyword = previous();
     consume(TokenType::SEMICOLON, "Expect ';' after 'break'.");
     return allocate<BreakStmt>(keyword);
   }
 
   Stmt* continueStatement() {
-    if (m_loop_depth == 0) {
-      error(previous(), "Cannot use 'continue' outside of a loop.");
-    }
     Token keyword = previous();
     consume(TokenType::SEMICOLON, "Expect ';' after 'continue'.");
-    return allocate<ContinueStmt>(keyword, m_continue_increment);
+    return allocate<ContinueStmt>(keyword);
   }
 
   /*
    * for (var i = 0; i < 10; i = i + 1){ print i; }
+   *
    * {
    *   var i = 0;
    *   while (i < 10) {
    *     print i;
-   *     i = i + 1;
    *   }
+   *   i = i + 1;
    * }
    */
   Stmt *forStatement() {
@@ -155,28 +150,19 @@ private:
       condition = expression();
     }
     consume(TokenType::SEMICOLON, "Expect ';' after loop condition.");
-    Expr *increment = nullptr;
+    Stmt *increment = nullptr;
     if (!check(TokenType::RIGHT_PAREN)) {
-      increment = expression();
+      increment = allocate<ExpressionStmt>(*expression());
     }
     consume(TokenType::RIGHT_PAREN, "Expect ')' after for clauses.");
 
-    m_loop_depth++;
-    // Store the increment expression to use in any continue statements
-    m_continue_increment = increment;
     Stmt *body = statement();
-    m_continue_increment = nullptr;
-    m_loop_depth--;
-
-    if (increment != nullptr) {
-      body = allocate<BlockStmt>(std::vector<Stmt*>{body, allocate<ExpressionStmt>(*increment)});
-    }
 
     if (condition == nullptr) {
       condition = allocate<LiteralExpr>(true);
     }
 
-    body = allocate<WhileStmt>(*condition, *body);
+    body = allocate<WhileStmt>(*condition, *body, increment);
 
     if (initializer != nullptr) {
       body = allocate<BlockStmt>(std::vector<Stmt*>{initializer, body});
@@ -203,9 +189,7 @@ private:
     Expr* condition = expression();
     consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
 
-    m_loop_depth++;
     Stmt* body = statement();
-    m_loop_depth--;
 
     return allocate<WhileStmt>(*condition, *body);
   }
@@ -462,6 +446,4 @@ private:
   std::vector<Expr*> m_allocated_exprs;  // Track allocated expressions
   std::vector<Stmt*> m_allocated_stmts;  // Track allocated statements
   int m_current = 0;
-  int m_loop_depth = 0;  // Track loop nesting level
-  Expr* m_continue_increment = nullptr;  // Current for-loop increment for continue statements
 };

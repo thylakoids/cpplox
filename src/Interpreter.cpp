@@ -63,7 +63,7 @@ LiteralValue Interpreter::lookUpVariable(const Token& name, const Expr& expr){
     auto it = m_locals.find(&expr);
     if (it != m_locals.end()) {
         int distance = it->second;
-        return m_envptr->getAt(distance, name.lexeme);
+        return m_envptr->getAt(distance, name);
     } else {
         // If not found in locals, assume it's a global variable.
         // The Resolver should have caught undefined variables already.
@@ -77,9 +77,10 @@ void Interpreter::visitWhileStmt(const WhileStmt &stmt) {
             try {
                 execute(stmt.body);
             } catch (const ContinueException&) {
-                // Continue encountered, skip to next iteration
+                if (stmt.increment) execute(*stmt.increment);
                 continue;
             }
+            if (stmt.increment) execute(*stmt.increment);
         }
     } catch (const BreakException&) {
         // Break encountered, exit the loop
@@ -245,9 +246,6 @@ void Interpreter::visitBreakStmt(const BreakStmt &stmt) {
 }
 
 void Interpreter::visitContinueStmt(const ContinueStmt &stmt) {
-    if (stmt.increment) {
-        evaluate(*stmt.increment);  // Execute increment before continuing
-    }
     throw ContinueException();
 }
 
@@ -313,4 +311,4 @@ void Interpreter::checkNumberOperand(const Token& op, const LiteralValue& left, 
     if (!isNumber(left) || !isNumber(right)) {
         throw RuntimeError(op, "Operands must be numbers.");
     }
-} 
+}

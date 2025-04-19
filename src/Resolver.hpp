@@ -82,7 +82,12 @@ public:
 
     void visitWhileStmt(const WhileStmt& stmt) override{
         resolve(&stmt.condition);
+        m_loop_depth++;
         resolve(&stmt.body);
+        m_loop_depth--;
+        if (stmt.increment) {
+            resolve(stmt.increment);
+        }
     }
 
     void visitBinaryExpr(const BinaryExpr& expr) override{
@@ -117,11 +122,15 @@ public:
     }
 
     void visitContinueStmt(const ContinueStmt& stmt) override{
-        // Do nothing
+        if (m_loop_depth == 0) {
+            lox::error(stmt.keyword, "Cannot use 'continue' outside of a loop.");
+        }
     }
 
     void visitBreakStmt(const BreakStmt& stmt) override{
-        // Do nothing
+        if (m_loop_depth == 0) {
+            lox::error(stmt.keyword, "Cannot use 'break' outside of a loop.");
+        }
     }
 
 private:
@@ -154,6 +163,7 @@ private:
         for (int i = scopes.size() -1; i>=0; i--){
             if (scopes.get(i).contains(name.lexeme)){
                 m_interpreter.resolve(expr, scopes.size() -1 - i);
+                return;
             }
         }
     }
@@ -174,6 +184,7 @@ private:
     Interpreter &m_interpreter;
     IndexableStack<std::unordered_map<std::string, bool>> scopes {};
     FunctionType currentFunction = FunctionType::NONE;
+    int m_loop_depth = 0; // Track loop nesting level
 };
 
 #endif // RESOLVER_H_
