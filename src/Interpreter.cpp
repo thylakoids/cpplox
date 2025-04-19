@@ -5,10 +5,12 @@
 #include "AstPrinter.hpp"
 
 Interpreter::Interpreter() {
-    m_envptr = std::make_shared<Environment>();
+    m_globals = std::make_shared<Environment>();
+    m_envptr = m_globals;
+
     // Register native functions in the global environment
     for (const auto& [name, function] : createNativeFunctions()) {
-        m_envptr->define(name, function);
+        m_globals->define(name, function);
     }
 }
 
@@ -52,7 +54,21 @@ LiteralValue Interpreter::visitUnaryExpr(const UnaryExpr &expr) {
 }
 
 LiteralValue Interpreter::visitVariableExpr(const VariableExpr &expr) {
-    return m_envptr->get(expr.name);
+    /*return m_envptr->get(expr.name);*/
+    return lookUpVariable(expr.name, expr);
+}
+
+LiteralValue Interpreter::lookUpVariable(const Token& name, const Expr& expr){
+    // Check if the expression exists in the locals map
+    auto it = m_locals.find(&expr);
+    if (it != m_locals.end()) {
+        int distance = it->second;
+        return m_envptr->getAt(distance, name.lexeme);
+    } else {
+        // If not found in locals, assume it's a global variable.
+        // The Resolver should have caught undefined variables already.
+        return m_globals->get(name);
+    }
 }
 
 void Interpreter::visitWhileStmt(const WhileStmt &stmt) {
@@ -190,7 +206,15 @@ void Interpreter::visitVarStmt(const VarStmt &stmt) {
 
 LiteralValue Interpreter::visitAssignExpr(const AssignExpr &expr) {
     LiteralValue value = evaluate(expr.value);
-    m_envptr->assign(expr.name, value);
+
+    auto it = m_locals.find(&expr);
+    if (it != m_locals.end()) {
+        int distance = it->second;
+        m_envptr->assignAt(distance, expr.name, value);
+    } else {
+        m_globals->assign(expr.name, value);
+    }
+
     return value;
 }
 
@@ -241,6 +265,10 @@ LiteralValue Interpreter::evaluate(const Expr& expr) {
 
 void Interpreter::execute(const Stmt& stmt) {
     stmt.accept(*this);
+}
+
+void Interpreter::resolve(const Expr& expr, int depth){
+    m_locals[&expr] = depth;
 }
 
 bool Interpreter::isTruthy(const LiteralValue& value) {

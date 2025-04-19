@@ -44,6 +44,7 @@ public:
     virtual ~Expr() = default;
     virtual std::string accept(ExprVisitor<std::string> &visitor) const = 0;
     virtual LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const = 0;
+    virtual void accept(ExprVisitor<void> &visitor) const = 0;
 };
 
 // Binary expression
@@ -58,6 +59,10 @@ public:
 
     LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
         return visitor.visitBinaryExpr(*this);
+    }
+
+    void accept(ExprVisitor<void> &visitor) const override {
+        visitor.visitBinaryExpr(*this);
     }
 
     const Expr &left;
@@ -79,6 +84,10 @@ public:
         return visitor.visitLogicalExpr(*this);
     }
 
+    void accept(ExprVisitor<void> &visitor) const override {
+        visitor.visitLogicalExpr(*this);
+    }
+
     const Expr &left;
     const Token op;
     const Expr &right;
@@ -96,6 +105,10 @@ public:
 
     LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
         return visitor.visitUnaryExpr(*this);
+    }
+
+    void accept(ExprVisitor<void> &visitor) const override {
+        visitor.visitUnaryExpr(*this);
     }
 
     const Token op;
@@ -116,6 +129,10 @@ public:
         return visitor.visitLiteralExpr(*this);
     }
 
+    void accept(ExprVisitor<void> &visitor) const override {
+        visitor.visitLiteralExpr(*this);
+    }
+
     const LiteralValue value;
 };
 
@@ -130,6 +147,10 @@ public:
 
     LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
         return visitor.visitGroupingExpr(*this);
+    }
+
+    void accept(ExprVisitor<void> &visitor) const override {
+        visitor.visitGroupingExpr(*this);
     }
 
     const Expr &expr;
@@ -148,6 +169,10 @@ public:
         return visitor.visitVariableExpr(*this);
     }
 
+    void accept(ExprVisitor<void> &visitor) const override {
+        visitor.visitVariableExpr(*this);
+    }
+
     const Token name;
 };
 
@@ -161,6 +186,10 @@ public:
 
     LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
         return visitor.visitAssignExpr(*this);
+    }
+
+    void accept(ExprVisitor<void> &visitor) const override {
+        visitor.visitAssignExpr(*this);
     }
 
     const Token name;
@@ -178,6 +207,10 @@ public:
 
   LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
     return visitor.visitCallExpr(*this);
+  }
+
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitCallExpr(*this);
   }
 
   const Expr &callee;

@@ -29,6 +29,14 @@ public:
         throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
     }
 
+    LiteralValue getAt(int distance, const std::string& name) {
+        Environment* environment = this;
+        for (int i = 0; i < distance; i++) {
+            environment = environment->enclosing; 
+        }
+        return environment->m_values.at(name);
+    }
+
     void assign(const Token& name, const LiteralValue& value) {
         if (m_values.find(name.lexeme) != m_values.end()) {
             m_values[name.lexeme] = value;
@@ -40,6 +48,15 @@ public:
         }
 
         throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
+    }
+
+    void assignAt(int distance, const Token& name, const LiteralValue& value) {
+        Environment* environment = this;
+        for (int i = 0; i < distance; i++) {
+            environment = environment->enclosing;
+        }
+        // Assuming the resolver guarantees the variable exists at this distance.
+        environment->m_values[name.lexeme] = value;
     }
 
     // Returns a string representation of the environment chain by calling the helper

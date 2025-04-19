@@ -6,6 +6,7 @@
 #include "Scanner.h"
 #include "Parser.hpp"
 #include "error.h"
+#include "Resolver.hpp"
 #include "Interpreter.h"
 
 using std::cout;
@@ -68,6 +69,11 @@ void run(const string &source) {
     std::vector<Stmt*> statements = parser.parse();
     // Stop if there was a syntax error
     if (lox::hadError) return;
+
     Interpreter interpreter;
+    Resolver resolver = Resolver(interpreter);
+    resolver.resolve(statements);
+    if (lox::hadError) return;
+
     interpreter.interpret(statements);
 }

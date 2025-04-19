@@ -16,8 +16,8 @@ extern bool hadRuntimeError;
 
 // Error reporting functions
 void report(int line, const std::string &where, const std::string &message);
-void error(int line, const std::string &message);
-void error(const Token& token, const std::string &message, bool isRuntime = false);
+void error(int line, const std::string &message); // scanner
+void error(const Token& token, const std::string &message, bool isRuntime = false); // parse: no runtime or interpreter: runtime
 
 // Error state management
 void resetError();

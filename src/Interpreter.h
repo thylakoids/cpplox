@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 #include "Expr.hpp"
 #include "Stmt.hpp"
 #include "Environment.hpp"
@@ -40,6 +41,7 @@ public:
 };
 
 class Interpreter : public ExprVisitor<LiteralValue>, public StmtVisitor<void> {
+friend class Resolver;
 public:
     Interpreter();
     Environment* getEnvironment() const;
@@ -71,10 +73,14 @@ public:
     void executeBlock(const std::vector<Stmt*>& statements, std::shared_ptr<Environment> env);
 
 private:
-    std::shared_ptr<Environment> m_envptr;
+    std::shared_ptr<Environment> m_globals; // Global scope environment
+    std::shared_ptr<Environment> m_envptr;  // Current environment pointer
+    std::unordered_map<const Expr*, int> m_locals;
 
     LiteralValue evaluate(const Expr& expr);
+    LiteralValue lookUpVariable(const Token&, const Expr&);
     void execute(const Stmt& stmt);
+    void resolve(const Expr& expr, int depth);
     bool isTruthy(const LiteralValue& value);
     bool isEqual(const LiteralValue& a, const LiteralValue& b);
     bool isNumber(const LiteralValue& value);
