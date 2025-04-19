@@ -54,7 +54,6 @@ LiteralValue Interpreter::visitUnaryExpr(const UnaryExpr &expr) {
 }
 
 LiteralValue Interpreter::visitVariableExpr(const VariableExpr &expr) {
-    /*return m_envptr->get(expr.name);*/
     return lookUpVariable(expr.name, expr);
 }
 

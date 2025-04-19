@@ -8,13 +8,32 @@
 #include "Stmt.hpp"
 #include "dataStruct.hpp"
 
+/*
+A block statement introduces a new scope for the statements it contains.
 
+A function declaration introduces a new scope for its body and binds its parameters in that scope.
+
+A variable declaration adds a new variable to the current scope.
+
+Variable and assignment expressions need to have their variables resolved.
+*/
 class Resolver : public ExprVisitor<void>, public StmtVisitor<void> {
 private:
     enum class FunctionType {
         NONE,
         FUNCTION,
     };
+
+    enum class VariableState {
+        DECLARED,
+        DEFINED,
+        USED
+    };
+
+    // Store the variable state and the token for error reporting
+    using Scope = std::unordered_map<std::string, std::pair<VariableState, Token>>;
+    IndexableStack<Scope> scopes {};
+
 public:
     explicit Resolver(Interpreter &interpreter) : m_interpreter(interpreter) {}
 
@@ -45,16 +64,16 @@ public:
     void visitVariableExpr (const VariableExpr &expr) override{
         if(!scopes.empty()){
             auto it = scopes.top().find(expr.name.lexeme);
-            if (it != scopes.top().end() && it->second == false) {
+            if (it != scopes.top().end() && it->second.first == VariableState::DECLARED) {
                  lox::error(expr.name, "Can't read local variable in its own initializer.");
             }
         }
-        resolveLocal(expr, expr.name);
+        resolveLocal(expr, expr.name, true);
     }
 
     void visitAssignExpr(const AssignExpr& expr) override{
         resolve(&expr.value);
-        resolveLocal(expr, expr.name);
+        resolveLocal(expr, expr.name, false);
     }
 
     void visitFunctionStmt(const FunctionStmt& stmt) override{
@@ -136,53 +155,69 @@ public:
 private:
 
     void beginScope(){
-        scopes.push(std::unordered_map<std::string, bool>());
+        scopes.push(Scope());
     }
 
     void endScope(){
+        Scope scope = scopes.top();
         scopes.pop();
+
+        for(const auto& [name, state_token_pair] : scope){
+            if (state_token_pair.first != VariableState::USED){
+                lox::error(state_token_pair.second, "Local variable '" + name + "' is defined but never used.");
+            }
+        }
     }
 
     void declare(const Token& name){
         if (scopes.empty()) return;
 
-        // Check if the name already exists in the current scope to prevent re-declaration errors later
-        if (scopes.top().count(name.lexeme)) {
+        Scope& current_scope = scopes.top();
+        if (current_scope.count(name.lexeme)) {
             lox::error(name, "Already a variable with this name in this scope.");
         }
-
-        scopes.top().emplace(name.lexeme, false);
+        current_scope.emplace(name.lexeme, std::make_pair(VariableState::DECLARED, name));
     }
 
     void define(const Token& name){
         if (scopes.empty()) return;
-        scopes.top()[name.lexeme] = true;
+        scopes.top()[name.lexeme].first = VariableState::DEFINED;
     }
 
-    void resolveLocal(const Expr& expr, const Token& name) {
-        for (int i = scopes.size() -1; i>=0; i--){
-            if (scopes.get(i).contains(name.lexeme)){
-                m_interpreter.resolve(expr, scopes.size() -1 - i);
+    // Added 'isRead' parameter to distinguish variable access (read) from assignment target resolution
+    void resolveLocal(const Expr& expr, const Token& name, bool isRead) {
+        for (int i = scopes.size() - 1; i >= 0; i--) {
+            Scope& scope = scopes.get(i); // Get mutable reference
+            if (scope.contains(name.lexeme)) {
+                m_interpreter.resolve(expr, scopes.size() - 1 - i);
+                // Mark as used only if it's being read, not just assigned to
+                if (isRead) {
+                     scope[name.lexeme].first = VariableState::USED;
+                }
                 return;
             }
         }
+        // If not found in local scopes, assume global (resolution error handled elsewhere if needed)
     }
 
     void resolveFunction(const FunctionStmt& function, FunctionType type){
         FunctionType enclosingFunction = currentFunction;
         currentFunction = type;
         beginScope();
-        for (Token param: function.params){
+        for (const Token& param: function.params){
             declare(param);
             define(param);
+            // Parameters are implicitly used if the function is called,
+            // but we can mark them USED immediately to avoid unused errors
+            scopes.top()[param.lexeme].first = VariableState::USED;
         }
         resolve(function.body);
         endScope();
+        currentFunction = enclosingFunction;
     }
 
 private:
     Interpreter &m_interpreter;
-    IndexableStack<std::unordered_map<std::string, bool>> scopes {};
     FunctionType currentFunction = FunctionType::NONE;
     int m_loop_depth = 0; // Track loop nesting level
 };

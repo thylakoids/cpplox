@@ -33,7 +33,7 @@ unary          → ( "!" | "-" ) unary | call
 call           → primary ( "(" arguments? ")" )*
 arguments      → expression ( "," expression )*
 primary        → NUMBER | STRING | "true" | "false" | "nil"
-               | "(" expression ")"
+               | "(" expression ")" | IDENTIFIER
 
 ### Key Points:
 1. Each level only matches expressions at its precedence level or higher
