@@ -59,6 +59,7 @@ public:
 
     // StmtVisitor method implementations
     void visitExpressionStmt(const ExpressionStmt &stmt) override;
+    void visitClassStmt(const ClassStmt &stmt) override;
     void visitFunctionStmt(const FunctionStmt &stmt) override;
     void visitIfStmt(const IfStmt &stmt) override;
     void visitPrintStmt(const PrintStmt &stmt) override;

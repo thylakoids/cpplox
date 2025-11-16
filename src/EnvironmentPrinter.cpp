@@ -1,6 +1,7 @@
 #include "EnvironmentPrinter.h"
 #include "Environment.hpp" // Need full definition here
 #include "LoxCallable.h" // For LiteralValue and LoxCallable
+#include "LoxInstance.h"
 #include <sstream>
 #include <string>
 #include <algorithm> // For std::max
@@ -26,6 +27,9 @@ struct LiteralPrinter {
     std::string operator()(std::nullptr_t) const { return "nil"; }
     std::string operator()(const std::shared_ptr<LoxCallable>& callable) const {
         return callable ? callable->toString() : "nil";
+    }
+    std::string operator()(const std::shared_ptr<LoxInstance>& instance) const {
+        return instance ? instance->toString() : "nil";
     }
 };
 

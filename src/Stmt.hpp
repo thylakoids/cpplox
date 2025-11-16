@@ -8,6 +8,7 @@
 
 // Forward declarations of all statement types we'll need
 class ExpressionStmt;
+class ClassStmt;
 class FunctionStmt;
 class IfStmt;
 class PrintStmt;
@@ -28,6 +29,7 @@ template <typename R>
 class StmtVisitor {
 public:
     virtual R visitExpressionStmt(const ExpressionStmt &stmt) = 0;
+    virtual R visitClassStmt(const ClassStmt &stmt) = 0;
     virtual R visitFunctionStmt(const FunctionStmt &stmt) = 0;
     virtual R visitIfStmt(const IfStmt &stmt) = 0;
     virtual R visitPrintStmt(const PrintStmt &stmt) = 0;
@@ -175,6 +177,19 @@ public:
     }
 
     const Token keyword;  // The 'continue' token, for error reporting
+};
+
+class ClassStmt : public Stmt {
+public:
+    ClassStmt(const Token &name, const std::vector<FunctionStmt*> &methods)
+        : name(name), methods(methods) {}
+
+    void accept(StmtVisitor<void> &visitor) const override {
+        visitor.visitClassStmt(*this);
+    }
+
+    const Token name;
+    const std::vector<FunctionStmt*> methods;
 };
 
 class FunctionStmt : public Stmt {

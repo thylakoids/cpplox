@@ -4,10 +4,12 @@
 program        → declaration* EOF ;
 
 ## Declarations
-declaration    → funDecl
+declaration    → classDecl
+               | funDecl
                | varDecl
                | statement ;
 
+classDecl      →  "class" IDENTIFIER "{" function* "}" ;
 funDecl        → "fun" function ;
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 

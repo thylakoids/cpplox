@@ -1,8 +1,10 @@
 #include <iostream>
 #include "NativeFunctions.hpp"
+#include "LoxClass.h"
 #include "Interpreter.h"
 #include "LoxFunction.h"
 #include "AstPrinter.hpp"
+#include "Stmt.hpp"
 
 Interpreter::Interpreter() {
     m_globals = std::make_shared<Environment>();
@@ -175,6 +177,11 @@ LiteralValue Interpreter::visitLogicalExpr(const LogicalExpr &expr) {
 
 void Interpreter::visitExpressionStmt(const ExpressionStmt &stmt) {
     evaluate(stmt.expression);
+}
+void Interpreter::visitClassStmt(const ClassStmt &stmt) {
+    m_envptr->define(stmt.name.lexeme, nullptr);
+    std::shared_ptr<LoxClass> klass = std::make_shared<LoxClass>(stmt.name.lexeme);
+    m_envptr->define(stmt.name.lexeme, klass);
 }
 
 void Interpreter::visitFunctionStmt(const FunctionStmt &stmt) {

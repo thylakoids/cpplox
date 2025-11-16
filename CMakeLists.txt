@@ -19,12 +19,16 @@ add_executable(${PROJECT_NAME}
     src/Token.cpp
     src/error.cpp
     src/LoxFunction.cpp
+    src/LoxClass.cpp
+    src/LoxInstance.cpp
     src/Interpreter.cpp
     src/EnvironmentPrinter.cpp
 )
 
 add_executable(test_expr
     src/test_expr.cpp
+    src/LoxClass.cpp
+    src/LoxInstance.cpp
 )
 
 find_package(fmt)

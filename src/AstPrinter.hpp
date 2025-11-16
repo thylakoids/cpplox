@@ -4,6 +4,7 @@
 #include <sstream>
 #include <memory>
 #include "LoxCallable.h"
+#include "LoxInstance.h"
 
 class AstPrinter : public ExprVisitor<std::string> {
 public:
@@ -61,6 +62,9 @@ private:
         std::string operator()(std::nullptr_t) const { return "nil"; }
         std::string operator()(const std::shared_ptr<LoxCallable>& callable) const {
             return callable->toString();
+        }
+        std::string operator()(const std::shared_ptr<LoxInstance>& instance) const {
+            return instance->toString();
         }
     };
 

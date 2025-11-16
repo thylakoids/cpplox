@@ -1,10 +1,9 @@
 #pragma once
-#include "Token.h"
-#include "error.h"
 #include "Expr.hpp"
 #include "Stmt.hpp"
+#include "Token.h"
+#include "error.h"
 #include <vector>
-
 
 class ParseError : public std::exception {
 public:
@@ -16,27 +15,27 @@ public:
 class Parser {
 public:
   [[nodiscard]] explicit Parser(const std::vector<Token> &tokens)
-      : m_tokens(tokens) {};
+      : m_tokens(tokens){};
 
   // Destructor
   ~Parser() {
     // Clean up all allocated expressions and statements
-    for (Expr* expr : m_allocated_exprs) {
+    for (Expr *expr : m_allocated_exprs) {
       delete expr;
     }
-    for (Stmt* stmt : m_allocated_stmts) {
+    for (Stmt *stmt : m_allocated_stmts) {
       delete stmt;
     }
   }
 
   // Prevent copying and moving
-  Parser(const Parser&) = delete;
-  Parser& operator=(const Parser&) = delete;
-  Parser(Parser&&) = delete;
-  Parser& operator=(Parser&&) = delete;
+  Parser(const Parser &) = delete;
+  Parser &operator=(const Parser &) = delete;
+  Parser(Parser &&) = delete;
+  Parser &operator=(Parser &&) = delete;
 
-  std::vector<Stmt*> parse() {
-    std::vector<Stmt*> statements;
+  std::vector<Stmt *> parse() {
+    std::vector<Stmt *> statements;
     while (!isAtEnd()) {
       statements.push_back(declaration());
     }
@@ -45,31 +44,46 @@ public:
 
 private:
   // Helper function to track allocated expressions
-  template<typename T, typename... Args>
-  T* allocate(Args&&... args) {
+  template <typename T, typename... Args> T *allocate(Args &&...args) {
     if constexpr (std::is_base_of_v<Expr, T>) {
-      T* expr = new T(std::forward<Args>(args)...);
+      T *expr = new T(std::forward<Args>(args)...);
       m_allocated_exprs.push_back(expr);
       return expr;
     } else if constexpr (std::is_base_of_v<Stmt, T>) {
-      T* stmt = new T(std::forward<Args>(args)...);
+      T *stmt = new T(std::forward<Args>(args)...);
       m_allocated_stmts.push_back(stmt);
       return stmt;
     }
   }
 
-  Stmt* declaration() {
+  Stmt *declaration() {
     try {
-      if (match({TokenType::FUN})) return function("function");
-      if (match({TokenType::VAR})) return varDeclaration();
+      if (match({TokenType::CLASS})) {
+        return classDeclaration();
+      }
+      if (match({TokenType::FUN}))
+        return function("function");
+      if (match({TokenType::VAR}))
+        return varDeclaration();
       return statement();
-    } catch (const ParseError& error) {
+    } catch (const ParseError &error) {
       synchronize();
       return nullptr;
     }
   }
 
-  Stmt* function(const std::string& kind) {
+  Stmt *classDeclaration() {
+    Token name = consume(TokenType::IDENTIFIER, "Expect class name.");
+    consume(TokenType::LEFT_BRACE, "Expect '{' before class body.");
+    std::vector<FunctionStmt *> methods;
+    while (!check(TokenType::RIGHT_BRACE) && !isAtEnd()) {
+      methods.push_back(function("method"));
+    }
+    consume(TokenType::RIGHT_BRACE, "Expect '}' after class body.");
+    return allocate<ClassStmt>(name, methods);
+  }
+
+  FunctionStmt *function(const std::string &kind) {
     Token name = consume(TokenType::IDENTIFIER, "Expect " + kind + " name.");
     consume(TokenType::LEFT_PAREN, "Expect '(' after " + kind + " name.");
     std::vector<Token> parameters;
@@ -78,20 +92,21 @@ private:
         if (parameters.size() >= 255) {
           error(peek(), "Cannot have more than 255 parameters.");
         }
-        parameters.push_back(consume(TokenType::IDENTIFIER, "Expect parameter name."));
+        parameters.push_back(
+            consume(TokenType::IDENTIFIER, "Expect parameter name."));
       } while (match({TokenType::COMMA}));
     }
     consume(TokenType::RIGHT_PAREN, "Expect ')' after parameters.");
     consume(TokenType::LEFT_BRACE, "Expect '{' before " + kind + " body.");
-    std::vector<Stmt*> body = dynamic_cast<BlockStmt*>(block())->statements;
+    std::vector<Stmt *> body = block()->statements;
     // RIGHT_BRACE is consumed by block()
     return allocate<FunctionStmt>(name, parameters, body);
   }
 
-  Stmt* varDeclaration() {
+  Stmt *varDeclaration() {
     Token name = consume(TokenType::IDENTIFIER, "Expect variable name.");
 
-    Expr* initializer = nullptr;
+    Expr *initializer = nullptr;
     if (match({TokenType::EQUAL})) {
       initializer = expression();
     }
@@ -100,25 +115,33 @@ private:
     return allocate<VarStmt>(name, initializer);
   }
 
-  Stmt* statement() {
-    if (match({TokenType::FOR})) return forStatement();
-    if (match({TokenType::IF})) return ifStatement();
-    if (match({TokenType::WHILE})) return whileStatement();
-    if (match({TokenType::PRINT})) return printStatement();
-    if (match({TokenType::LEFT_BRACE})) return block();
-    if (match({TokenType::BREAK})) return breakStatement();
-    if (match({TokenType::CONTINUE})) return continueStatement();
-    if (match({TokenType::RETURN})) return returnStatement();
+  Stmt *statement() {
+    if (match({TokenType::FOR}))
+      return forStatement();
+    if (match({TokenType::IF}))
+      return ifStatement();
+    if (match({TokenType::WHILE}))
+      return whileStatement();
+    if (match({TokenType::PRINT}))
+      return printStatement();
+    if (match({TokenType::LEFT_BRACE}))
+      return block();
+    if (match({TokenType::BREAK}))
+      return breakStatement();
+    if (match({TokenType::CONTINUE}))
+      return continueStatement();
+    if (match({TokenType::RETURN}))
+      return returnStatement();
     return expressionStatement();
   }
 
-  Stmt* breakStatement() {
+  Stmt *breakStatement() {
     Token keyword = previous();
     consume(TokenType::SEMICOLON, "Expect ';' after 'break'.");
     return allocate<BreakStmt>(keyword);
   }
 
-  Stmt* continueStatement() {
+  Stmt *continueStatement() {
     Token keyword = previous();
     consume(TokenType::SEMICOLON, "Expect ';' after 'continue'.");
     return allocate<ContinueStmt>(keyword);
@@ -165,18 +188,18 @@ private:
     body = allocate<WhileStmt>(*condition, *body, increment);
 
     if (initializer != nullptr) {
-      body = allocate<BlockStmt>(std::vector<Stmt*>{initializer, body});
+      body = allocate<BlockStmt>(std::vector<Stmt *>{initializer, body});
     }
     return body;
   }
 
-  Stmt* ifStatement() {
+  Stmt *ifStatement() {
     consume(TokenType::LEFT_PAREN, "Expect '(' after 'if'.");
-    Expr* condition = expression();
+    Expr *condition = expression();
     consume(TokenType::RIGHT_PAREN, "Expect ')' after if condition.");
 
-    Stmt* thenBranch = statement();
-    Stmt* elseBranch = nullptr;
+    Stmt *thenBranch = statement();
+    Stmt *elseBranch = nullptr;
     if (match({TokenType::ELSE})) {
       elseBranch = statement();
     }
@@ -184,40 +207,40 @@ private:
     return allocate<IfStmt>(*condition, *thenBranch, elseBranch);
   }
 
-  Stmt* whileStatement() {
+  Stmt *whileStatement() {
     consume(TokenType::LEFT_PAREN, "Expect '(' after 'while'.");
-    Expr* condition = expression();
+    Expr *condition = expression();
     consume(TokenType::RIGHT_PAREN, "Expect ')' after condition.");
 
-    Stmt* body = statement();
+    Stmt *body = statement();
 
     return allocate<WhileStmt>(*condition, *body);
   }
 
-  Stmt* printStatement() {
-    Expr* value = expression();
+  Stmt *printStatement() {
+    Expr *value = expression();
     consume(TokenType::SEMICOLON, "Expect ';' after value.");
     return allocate<PrintStmt>(*value);
   }
 
-  Stmt* returnStatement() {
+  Stmt *returnStatement() {
     Token keyword = previous();
-    Expr* value = nullptr;
-    if(!check(TokenType::SEMICOLON)) {
+    Expr *value = nullptr;
+    if (!check(TokenType::SEMICOLON)) {
       value = expression();
     }
     consume(TokenType::SEMICOLON, "Expect ';' after return value.");
     return allocate<ReturnStmt>(keyword, value);
   }
 
-  Stmt* expressionStatement() {
-    Expr* expr = expression();
+  Stmt *expressionStatement() {
+    Expr *expr = expression();
     consume(TokenType::SEMICOLON, "Expect ';' after expression.");
     return allocate<ExpressionStmt>(*expr);
   }
 
-  Stmt* block() {
-    std::vector<Stmt*> statements;
+  BlockStmt *block() {
+    std::vector<Stmt *> statements;
     while (!check(TokenType::RIGHT_BRACE) && !isAtEnd()) {
       statements.push_back(declaration());
     }
@@ -236,7 +259,7 @@ private:
     if (match({TokenType::EQUAL})) {
       Token equals = previous();
       Expr *value = assignment();
-      if (VariableExpr* ve = dynamic_cast<VariableExpr *>(exprptr)) {
+      if (VariableExpr *ve = dynamic_cast<VariableExpr *>(exprptr)) {
         Token name = ve->name;
         return allocate<AssignExpr>(name, *value);
       }
@@ -261,7 +284,7 @@ private:
   Expr *logic_and() {
     // logic_and      → equality ( "and" equality )* ;
     Expr *exprptr = equality();
-    while(match({TokenType::AND})) {
+    while (match({TokenType::AND})) {
       Token op = previous();
       Expr *right = equality();
       exprptr = allocate<LogicalExpr>(*exprptr, op, *right);
@@ -348,7 +371,8 @@ private:
         arguments.push_back(expression());
       } while (match({TokenType::COMMA}));
     }
-    Token paren = consume(TokenType::RIGHT_PAREN, "Expect ')' after arguments.");
+    Token paren =
+        consume(TokenType::RIGHT_PAREN, "Expect ')' after arguments.");
     return allocate<CallExpr>(*callee, paren, arguments);
   }
 
@@ -365,10 +389,10 @@ private:
       if (previous().lexeme.find('.') != std::string::npos)
         return allocate<LiteralExpr>(std::stod(previous().lexeme));
       return allocate<LiteralExpr>(std::stoi(previous().lexeme));
-
     }
     if (match({TokenType::STRING}))
-      return allocate<LiteralExpr>(previous().lexeme.substr(1, previous().lexeme.size() - 2));
+      return allocate<LiteralExpr>(
+          previous().lexeme.substr(1, previous().lexeme.size() - 2));
     if (match({TokenType::IDENTIFIER}))
       return allocate<VariableExpr>(previous());
     if (match({TokenType::LEFT_PAREN})) {
@@ -443,7 +467,7 @@ private:
 
 private:
   std::vector<Token> m_tokens;
-  std::vector<Expr*> m_allocated_exprs;  // Track allocated expressions
-  std::vector<Stmt*> m_allocated_stmts;  // Track allocated statements
+  std::vector<Expr *> m_allocated_exprs; // Track allocated expressions
+  std::vector<Stmt *> m_allocated_stmts; // Track allocated statements
   int m_current = 0;
 };

@@ -76,6 +76,12 @@ public:
         resolveLocal(expr, expr.name, false);
     }
 
+    void visitClassStmt(const ClassStmt &stmt) override{
+        declare(stmt.name);
+        define(stmt.name);
+    }
+
+
     void visitFunctionStmt(const FunctionStmt& stmt) override{
         declare(stmt.name);
         define(stmt.name);
