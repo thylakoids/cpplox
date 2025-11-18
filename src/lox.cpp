@@ -1,13 +1,13 @@
+#include "Interpreter.h"
+#include "Parser.hpp"
+#include "Resolver.hpp"
+#include "Scanner.h"
+#include "error.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <vector>
-#include "Scanner.h"
-#include "Parser.hpp"
-#include "error.h"
-#include "Resolver.hpp"
-#include "Interpreter.h"
 
 using std::cout;
 using std::endl;
@@ -40,8 +40,10 @@ void runFile(const string &path) {
     ifile.close();
 
     // Indicate an error in the exit code
-    if (lox::hadError) exit(65);
-    if (lox::hadRuntimeError) exit(70);
+    if (lox::hadError)
+      exit(65);
+    if (lox::hadRuntimeError)
+      exit(70);
   } else {
     cout << "Failed to open file: " << path << endl;
     exit(74);
@@ -53,8 +55,10 @@ void runPrompt() {
   string line;
   while (true) {
     cout << "> ";
-    if (!std::getline(std::cin, line)) break;
-    if (line == ".exit") break;
+    if (!std::getline(std::cin, line))
+      break;
+    if (line == ".exit")
+      break;
     run(line);
     // Reset error flag in REPL mode
     lox::resetError();
@@ -62,18 +66,20 @@ void runPrompt() {
 }
 
 void run(const string &source) {
-    Scanner scanner(source);
-    vector<Token> tokens = scanner.scanTokens();
+  Scanner scanner(source);
+  vector<Token> tokens = scanner.scanTokens();
 
-    Parser parser(tokens);
-    std::vector<Stmt*> statements = parser.parse();
-    // Stop if there was a syntax error
-    if (lox::hadError) return;
+  Parser parser(tokens);
+  std::vector<Stmt *> statements = parser.parse();
+  // Stop if there was a syntax error
+  if (lox::hadError)
+    return;
 
-    Interpreter interpreter;
-    Resolver resolver = Resolver(interpreter);
-    resolver.resolve(statements);
-    if (lox::hadError) return;
+  Interpreter interpreter;
+  Resolver resolver = Resolver(interpreter);
+  resolver.resolve(statements);
+  if (lox::hadError)
+    return;
 
-    interpreter.interpret(statements);
+  interpreter.interpret(statements);
 }

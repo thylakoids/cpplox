@@ -15,7 +15,7 @@ public:
 class Parser {
 public:
   [[nodiscard]] explicit Parser(const std::vector<Token> &tokens)
-      : m_tokens(tokens){};
+      : m_tokens(tokens) {};
 
   // Destructor
   ~Parser() {
