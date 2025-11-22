@@ -19,6 +19,7 @@ class GroupingExpr;
 class VariableExpr;
 class AssignExpr;
 class CallExpr;
+class GetExpr;
 
 // Define literal value type that can hold any kind of literal
 // todo: int is redundant
@@ -36,6 +37,7 @@ public:
   virtual R visitVariableExpr(const VariableExpr &expr) = 0;
   virtual R visitAssignExpr(const AssignExpr &expr) = 0;
   virtual R visitCallExpr(const CallExpr &expr) = 0;
+  virtual R visitGetExpr(const GetExpr &expr) = 0;
   virtual ~ExprVisitor() = default;
 };
 
@@ -220,26 +222,23 @@ public:
 };
 
 class GetExpr : public Expr {
+
 public:
-    GetExpr(const Expr &object, const Token &name) : object(object), name(name) {}
+  GetExpr(const Expr &object, const Token &name) : object(object), name(name) {}
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        // Implement if needed
-        return "";
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitGetExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        // Implement if needed
-        return {};
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitGetExpr(*this);
+  }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitGetExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        // Implement if needed
-    }
-
-    const Expr &object;
-    const Token name;
+  const Expr &object;
+  const Token name;
 };
-
 
 #endif // EXPR_H_

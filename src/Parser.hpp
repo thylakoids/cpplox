@@ -353,6 +353,9 @@ private:
     while (true) {
       if (match({TokenType::LEFT_PAREN})) {
         exprptr = finishCall(exprptr);
+      }else if (match({TokenType::DOT})) {
+        Token name = consume(TokenType::IDENTIFIER, "Expect property name after '.'.");
+        exprptr = allocate<GetExpr>(*exprptr, name);
       } else {
         break;
       }

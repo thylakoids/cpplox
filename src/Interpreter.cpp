@@ -165,6 +165,15 @@ LiteralValue Interpreter::visitCallExpr(const CallExpr &expr) {
     return function->call(*this, arguments);
 }
 
+LiteralValue Interpreter::visitGetExpr(const GetExpr &expr) {
+    LiteralValue object = evaluate(expr.object);
+    if (std::holds_alternative<std::shared_ptr<LoxInstance>>(object)) {
+        auto instance = std::get<std::shared_ptr<LoxInstance>>(object);
+        return instance->get(expr.name.lexeme);
+    }
+    throw RuntimeError(expr.name, "Only instances have properties.");
+}
+
 LiteralValue Interpreter::visitLogicalExpr(const LogicalExpr &expr) {
     LiteralValue left = evaluate(expr.left);
     if (expr.op.lexeme == "or") {

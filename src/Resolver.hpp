@@ -127,6 +127,10 @@ public:
         }
     }
 
+    void visitGetExpr(const GetExpr& expr) override{
+        resolve(&expr.object);
+    }
+
     void visitGroupingExpr(const GroupingExpr& expr) override{
         resolve(&expr.expr);
     }

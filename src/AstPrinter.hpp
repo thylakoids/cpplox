@@ -44,6 +44,10 @@ public:
         return parenthesize("call " + expr.callee.accept(*this), expr.arguments);
     }
 
+    std::string visitGetExpr(const GetExpr &expr) override {
+        return parenthesize("get " + expr.name.lexeme, {&expr.object});
+    }
+
 private:
     // Helper struct to print different literal types
     struct LiteralPrinter {
