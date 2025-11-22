@@ -254,7 +254,7 @@ private:
   };
 
   Expr *assignment() {
-    // assignment -> IDENTIFIER "=" assignment | logic_or ;
+    // assignment -> ( call "." )? IDENTIFIER "=" assignment | logic_or ;
     Expr *exprptr = logic_or();
     if (match({TokenType::EQUAL})) {
       Token equals = previous();
@@ -262,6 +262,8 @@ private:
       if (VariableExpr *ve = dynamic_cast<VariableExpr *>(exprptr)) {
         Token name = ve->name;
         return allocate<AssignExpr>(name, *value);
+      }else if (GetExpr *ge = dynamic_cast<GetExpr *>(exprptr)) {
+        return allocate<SetExpr>(ge->object, ge->name, *value);
       }
       // Don't throw it because the parser isn't in a confused state
       // where we need to go into panic mode and synchronize.
@@ -348,7 +350,7 @@ private:
   }
 
   Expr *call() {
-    // call -> primary ( "(" arguments? ")" )* ;
+    // call -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
     Expr *exprptr = primary();
     while (true) {
       if (match({TokenType::LEFT_PAREN})) {
@@ -381,7 +383,7 @@ private:
 
   Expr *primary() {
     // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression
-    // ")" | IDENTIFIER ;
+    // ")" | IDENTIFIER | "this" ;
     if (match({TokenType::FALSE}))
       return allocate<LiteralExpr>(false);
     if (match({TokenType::TRUE}))
@@ -396,6 +398,8 @@ private:
     if (match({TokenType::STRING}))
       return allocate<LiteralExpr>(
           previous().lexeme.substr(1, previous().lexeme.size() - 2));
+    if (match({TokenType::THIS}))
+      return allocate<ThisExpr>(previous());
     if (match({TokenType::IDENTIFIER}))
       return allocate<VariableExpr>(previous());
     if (match({TokenType::LEFT_PAREN})) {

@@ -2,10 +2,10 @@
 #define EXPR_H_
 #pragma once
 
+#include "Token.h"
+#include <memory>
 #include <string>
 #include <variant>
-#include <memory>
-#include "Token.h"
 #include <vector>
 
 class LoxCallable;
@@ -20,14 +20,17 @@ class VariableExpr;
 class AssignExpr;
 class CallExpr;
 class GetExpr;
+class SetExpr;
+class ThisExpr;
 
 // Define literal value type that can hold any kind of literal
 // todo: int is redundant
-using LiteralValue = std::variant<std::string, int, double, bool, std::nullptr_t, std::shared_ptr<LoxCallable>, std::shared_ptr<LoxInstance>>;
+using LiteralValue =
+    std::variant<std::string, int, double, bool, std::nullptr_t,
+                 std::shared_ptr<LoxCallable>, std::shared_ptr<LoxInstance>>;
 
 // Visitor pattern
-template <typename R>
-class ExprVisitor {
+template <typename R> class ExprVisitor {
 public:
   virtual R visitBinaryExpr(const BinaryExpr &expr) = 0;
   virtual R visitLogicalExpr(const LogicalExpr &expr) = 0;
@@ -38,170 +41,172 @@ public:
   virtual R visitAssignExpr(const AssignExpr &expr) = 0;
   virtual R visitCallExpr(const CallExpr &expr) = 0;
   virtual R visitGetExpr(const GetExpr &expr) = 0;
+  virtual R visitSetExpr(const SetExpr &expr) = 0;
+  virtual R visitThisExpr(const ThisExpr &expr) = 0;
   virtual ~ExprVisitor() = default;
 };
 
 // Base Expr class
 class Expr {
 public:
-    virtual ~Expr() = default;
-    virtual std::string accept(ExprVisitor<std::string> &visitor) const = 0;
-    virtual LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const = 0;
-    virtual void accept(ExprVisitor<void> &visitor) const = 0;
+  virtual ~Expr() = default;
+  virtual std::string accept(ExprVisitor<std::string> &visitor) const = 0;
+  virtual LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const = 0;
+  virtual void accept(ExprVisitor<void> &visitor) const = 0;
 };
 
 // Binary expression
 class BinaryExpr : public Expr {
 public:
-    BinaryExpr(const Expr &left, const Token &op, const Expr &right)
-        : left(left), op(op), right(right) {}
+  BinaryExpr(const Expr &left, const Token &op, const Expr &right)
+      : left(left), op(op), right(right) {}
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        return visitor.visitBinaryExpr(*this);
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitBinaryExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        return visitor.visitBinaryExpr(*this);
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitBinaryExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        visitor.visitBinaryExpr(*this);
-    }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitBinaryExpr(*this);
+  }
 
-    const Expr &left;
-    const Token op;
-    const Expr &right;
+  const Expr &left;
+  const Token op;
+  const Expr &right;
 };
 
 // Binary expression
 class LogicalExpr : public Expr {
 public:
-    LogicalExpr(const Expr &left, const Token &op, const Expr &right)
-        : left(left), op(op), right(right) {}
+  LogicalExpr(const Expr &left, const Token &op, const Expr &right)
+      : left(left), op(op), right(right) {}
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        return visitor.visitLogicalExpr(*this);
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitLogicalExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        return visitor.visitLogicalExpr(*this);
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitLogicalExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        visitor.visitLogicalExpr(*this);
-    }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitLogicalExpr(*this);
+  }
 
-    const Expr &left;
-    const Token op;
-    const Expr &right;
+  const Expr &left;
+  const Token op;
+  const Expr &right;
 };
 
 // Unary expression
 class UnaryExpr : public Expr {
 public:
-    UnaryExpr(const Token &op, const Expr &right) 
-        : op(op), right(right) {}
+  UnaryExpr(const Token &op, const Expr &right) : op(op), right(right) {}
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        return visitor.visitUnaryExpr(*this);
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitUnaryExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        return visitor.visitUnaryExpr(*this);
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitUnaryExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        visitor.visitUnaryExpr(*this);
-    }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitUnaryExpr(*this);
+  }
 
-    const Token op;
-    const Expr &right;
+  const Token op;
+  const Expr &right;
 };
 
 // Literal expression
 class LiteralExpr : public Expr {
 public:
-    LiteralExpr(const LiteralValue &value) : value(value) {}
-    LiteralExpr() : value(nullptr) {}  // for nil
+  LiteralExpr(const LiteralValue &value) : value(value) {}
+  LiteralExpr() : value(nullptr) {} // for nil
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        return visitor.visitLiteralExpr(*this);
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitLiteralExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        return visitor.visitLiteralExpr(*this);
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitLiteralExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        visitor.visitLiteralExpr(*this);
-    }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitLiteralExpr(*this);
+  }
 
-    const LiteralValue value;
+  const LiteralValue value;
 };
 
 // Grouping expression
 class GroupingExpr : public Expr {
 public:
-    GroupingExpr(const Expr &expr) : expr(expr) {}
+  GroupingExpr(const Expr &expr) : expr(expr) {}
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        return visitor.visitGroupingExpr(*this);
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitGroupingExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        return visitor.visitGroupingExpr(*this);
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitGroupingExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        visitor.visitGroupingExpr(*this);
-    }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitGroupingExpr(*this);
+  }
 
-    const Expr &expr;
+  const Expr &expr;
 };
 
 // Variable expression
 class VariableExpr : public Expr {
 public:
-    VariableExpr(const Token &name) : name(name) {}
+  VariableExpr(const Token &name) : name(name) {}
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        return visitor.visitVariableExpr(*this);
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitVariableExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        return visitor.visitVariableExpr(*this);
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitVariableExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        visitor.visitVariableExpr(*this);
-    }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitVariableExpr(*this);
+  }
 
-    const Token name;
+  const Token name;
 };
 
 class AssignExpr : public Expr {
 public:
-    AssignExpr(const Token &name, const Expr &value) : name(name), value(value) {}
+  AssignExpr(const Token &name, const Expr &value) : name(name), value(value) {}
 
-    std::string accept(ExprVisitor<std::string> &visitor) const override {
-        return visitor.visitAssignExpr(*this);
-    }
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitAssignExpr(*this);
+  }
 
-    LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
-        return visitor.visitAssignExpr(*this);
-    }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitAssignExpr(*this);
+  }
 
-    void accept(ExprVisitor<void> &visitor) const override {
-        visitor.visitAssignExpr(*this);
-    }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitAssignExpr(*this);
+  }
 
-    const Token name;
-    const Expr &value;
+  const Token name;
+  const Expr &value;
 };
 
 class CallExpr : public Expr {
 public:
-  CallExpr(const Expr &callee, const Token &paren, const std::vector<Expr *> &arguments)
+  CallExpr(const Expr &callee, const Token &paren,
+           const std::vector<Expr *> &arguments)
       : callee(callee), paren(paren), arguments(arguments) {}
 
   std::string accept(ExprVisitor<std::string> &visitor) const override {
@@ -241,4 +246,41 @@ public:
   const Token name;
 };
 
+class SetExpr : public Expr {
+
+public:
+  SetExpr(const Expr &object, const Token &name, const Expr &value)
+      : object(object), name(name), value(value) {}
+
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitSetExpr(*this);
+  }
+
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitSetExpr(*this);
+  }
+
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitSetExpr(*this);
+  }
+
+  const Expr &object;
+  const Token name;
+  const Expr &value;
+};
+
+class ThisExpr : public Expr {
+public:
+  ThisExpr(const Token &keyword) : keyword(keyword) {}
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitThisExpr(*this);
+  }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitThisExpr(*this);
+  }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitThisExpr(*this);
+  }
+  const Token keyword;
+};
 #endif // EXPR_H_

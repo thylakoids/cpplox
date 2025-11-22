@@ -22,6 +22,12 @@ private:
     enum class FunctionType {
         NONE,
         FUNCTION,
+        METHOD,
+    };
+
+    enum class ClassType {
+        NONE,
+        CLASS,
     };
 
     enum class VariableState {
@@ -77,8 +83,22 @@ public:
     }
 
     void visitClassStmt(const ClassStmt &stmt) override{
+        ClassType enclosingClass = currentClass;
+        currentClass = ClassType::CLASS;
+
         declare(stmt.name);
         define(stmt.name);
+        beginScope();
+        Token thisToken(TokenType::THIS, "this", stmt.name.line);
+        declare(thisToken);
+        define(thisToken); 
+        // avoid unused 'this' warning
+        scopes.top()[thisToken.lexeme].first = VariableState::USED;
+        for (const FunctionStmt* method : stmt.methods){
+            resolveFunction(*method, FunctionType::METHOD);
+        }
+        endScope();
+        currentClass = enclosingClass;
     }
 
 
@@ -129,6 +149,19 @@ public:
 
     void visitGetExpr(const GetExpr& expr) override{
         resolve(&expr.object);
+    }
+
+    void visitSetExpr(const SetExpr& expr) override{
+        resolve(&expr.value);
+        resolve(&expr.object);
+    }
+
+    void visitThisExpr(const ThisExpr& expr) override{
+        if (currentClass == ClassType::NONE) {
+            lox::error(expr.keyword, "Can't use 'this' outside of a class.");
+            return;
+        }
+        resolveLocal(expr, expr.keyword, true);
     }
 
     void visitGroupingExpr(const GroupingExpr& expr) override{
@@ -229,6 +262,7 @@ private:
 private:
     Interpreter &m_interpreter;
     FunctionType currentFunction = FunctionType::NONE;
+    ClassType currentClass = ClassType::NONE;
     int m_loop_depth = 0; // Track loop nesting level
 };
 

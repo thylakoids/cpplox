@@ -1,5 +1,6 @@
 #include "LoxFunction.h"
 #include "Interpreter.h"
+#include <memory>
 
 LoxFunction::LoxFunction(const FunctionStmt *declaration, std::shared_ptr<Environment>closure)
     : m_declaration(declaration), m_closureptr(closure) {}
@@ -24,6 +25,12 @@ LiteralValue LoxFunction::call(Interpreter &interpreter,
 
     // Return nil if no return statement was executed
     return nullptr;
+}
+
+std::shared_ptr<LoxFunction> LoxFunction::bind(std::shared_ptr<LoxInstance> instance) {
+    auto envptr = std::make_shared<Environment>(m_closureptr.get());
+    envptr->define("this", instance);
+    return std::make_shared<LoxFunction>(m_declaration, envptr);
 }
 
 int LoxFunction::arity() const { return m_declaration->params.size(); }

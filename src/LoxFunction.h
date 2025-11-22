@@ -15,6 +15,7 @@ class LoxFunction : public LoxCallable {
 public:
     explicit LoxFunction(const FunctionStmt* declaration, std::shared_ptr<Environment> closure);
     LiteralValue call(Interpreter& interpreter, const std::vector<LiteralValue>& arguments) override;
+    std::shared_ptr<LoxFunction> bind(std::shared_ptr<class LoxInstance> instance);
     int arity() const override;
     std::string toString() const override;
 

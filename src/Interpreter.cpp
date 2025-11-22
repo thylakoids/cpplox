@@ -174,6 +174,22 @@ LiteralValue Interpreter::visitGetExpr(const GetExpr &expr) {
     throw RuntimeError(expr.name, "Only instances have properties.");
 }
 
+LiteralValue Interpreter::visitSetExpr(const SetExpr &expr) {
+    LiteralValue object = evaluate(expr.object);
+    if (!std::holds_alternative<std::shared_ptr<LoxInstance>>(object)) {
+        throw RuntimeError(expr.name, "Only instances have fields.");
+    }
+
+    LiteralValue value = evaluate(expr.value);
+    auto instance = std::get<std::shared_ptr<LoxInstance>>(object);
+    instance->set(expr.name.lexeme, value);
+    return value;
+}
+
+LiteralValue Interpreter::visitThisExpr(const ThisExpr &expr) {
+    return lookUpVariable(expr.keyword, expr);
+}
+
 LiteralValue Interpreter::visitLogicalExpr(const LogicalExpr &expr) {
     LiteralValue left = evaluate(expr.left);
     if (expr.op.lexeme == "or") {
@@ -189,8 +205,14 @@ void Interpreter::visitExpressionStmt(const ExpressionStmt &stmt) {
 }
 void Interpreter::visitClassStmt(const ClassStmt &stmt) {
     m_envptr->define(stmt.name.lexeme, nullptr);
-    std::shared_ptr<LoxClass> klass = std::make_shared<LoxClass>(stmt.name.lexeme);
-    m_envptr->define(stmt.name.lexeme, klass);
+    std::unordered_map<std::string, std::shared_ptr<LoxFunction>> methods;
+    for (const auto& method : stmt.methods) {
+        std::shared_ptr<LoxFunction> function = std::make_shared<LoxFunction>(method, m_envptr);
+        methods[method->name.lexeme] = function;
+    }
+
+    std::shared_ptr<LoxClass> klass = std::make_shared<LoxClass>(stmt.name.lexeme, std::move(methods));
+    m_envptr->assign(stmt.name, klass);
 }
 
 void Interpreter::visitFunctionStmt(const FunctionStmt &stmt) {

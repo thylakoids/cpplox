@@ -3,6 +3,10 @@
 #include <string>
 
 LoxClass::LoxClass(std::string name) : m_name(name) {}
+LoxClass::LoxClass(
+    std::string name,
+    std::unordered_map<std::string, std::shared_ptr<LoxFunction>> methods)
+    : m_name(std::move(name)), m_methods(std::move(methods)) {}
 
 LiteralValue LoxClass::call(Interpreter &interpreter,
                             const std::vector<LiteralValue> &arguments) {

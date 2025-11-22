@@ -6,11 +6,12 @@
 #include "LoxClass.h"
 #include <unordered_map>
 
-class LoxInstance {
+class LoxInstance: public std::enable_shared_from_this<LoxInstance> {
 public:
   LoxInstance(std::shared_ptr<LoxClass> klass);
   std::string toString() const;
   LiteralValue get(const std::string &name);
+  void set(const std::string &name, const LiteralValue &value);
 
 private:
   std::shared_ptr<LoxClass> m_klass;

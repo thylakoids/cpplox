@@ -48,12 +48,13 @@ term           → factor ( ( "-" | "+" ) factor )* ;
 factor         → unary ( ( "/" | "*" ) unary )* ;
 unary          → ( "!" | "-" ) unary
                | call ;
-call           → primary ( "(" arguments? ")" )* ;
+call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
 arguments      → expression ( "," expression )* ;
 primary        → "true" | "false" | "nil"
-               | NUMBER | STRING 
+               | NUMBER | STRING
                | "(" expression ")"
-               | IDENTIFIER ;
+               | IDENTIFIER
+               | "this" ;
 
 ## Lexical Grammar
 NUMBER         → DIGIT+ ( "." DIGIT+ )? ;

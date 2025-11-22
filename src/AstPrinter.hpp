@@ -48,6 +48,14 @@ public:
         return parenthesize("get " + expr.name.lexeme, {&expr.object});
     }
 
+    std::string visitSetExpr(const SetExpr &expr) override {
+        return parenthesize("set " + expr.name.lexeme, {&expr.object, &expr.value});
+    }
+
+    std::string visitThisExpr(const ThisExpr &expr) override {
+        return "this";
+    }
+
 private:
     // Helper struct to print different literal types
     struct LiteralPrinter {

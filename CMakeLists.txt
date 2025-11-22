@@ -29,6 +29,10 @@ add_executable(test_expr
     src/test_expr.cpp
     src/LoxClass.cpp
     src/LoxInstance.cpp
+    src/Interpreter.cpp
+    src/EnvironmentPrinter.cpp
+    src/LoxFunction.cpp
+    src/error.cpp
 )
 
 find_package(fmt)
