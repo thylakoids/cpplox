@@ -22,6 +22,7 @@ private:
     enum class FunctionType {
         NONE,
         FUNCTION,
+        INITIALIZER,
         METHOD,
     };
 
@@ -95,7 +96,8 @@ public:
         // avoid unused 'this' warning
         scopes.top()[thisToken.lexeme].first = VariableState::USED;
         for (const FunctionStmt* method : stmt.methods){
-            resolveFunction(*method, FunctionType::METHOD);
+            FunctionType declaration = method->name.lexeme == "init" ? FunctionType::INITIALIZER : FunctionType::METHOD;
+            resolveFunction(*method, declaration);
         }
         endScope();
         currentClass = enclosingClass;
@@ -122,7 +124,12 @@ public:
         if(currentFunction == FunctionType::NONE){
             lox::error(stmt.keyword, "Can't return from top-level code.");
         }
-        if(stmt.value) resolve(stmt.value);
+        if(stmt.value){
+            if(currentFunction == FunctionType::INITIALIZER){
+                lox::error(stmt.keyword, "Can't return a value from an initializer.");
+            }
+        resolve(stmt.value);
+        }
     }
 
     void visitWhileStmt(const WhileStmt& stmt) override{

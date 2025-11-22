@@ -12,8 +12,19 @@ LiteralValue LoxClass::call(Interpreter &interpreter,
                             const std::vector<LiteralValue> &arguments) {
   std::shared_ptr<LoxInstance> instance =
       std::make_shared<LoxInstance>(shared_from_this());
+  auto it = m_methods.find("init");
+  if (it != m_methods.end()) {
+    auto initializer = it->second;
+    initializer->bind(instance)->call(interpreter, arguments);
+  }
   return instance;
 }
 
-int LoxClass::arity() const { return 0; }
+int LoxClass::arity() const {
+    auto it = m_methods.find("init");
+    if (it != m_methods.end()) {
+        return it->second->arity();
+    }
+    return 0;
+}
 std::string LoxClass::toString() const { return m_name; }

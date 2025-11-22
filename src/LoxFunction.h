@@ -13,7 +13,7 @@ class Interpreter;
 
 class LoxFunction : public LoxCallable {
 public:
-    explicit LoxFunction(const FunctionStmt* declaration, std::shared_ptr<Environment> closure);
+    explicit LoxFunction(const FunctionStmt* declaration, std::shared_ptr<Environment> closure, bool isInitializer);
     LiteralValue call(Interpreter& interpreter, const std::vector<LiteralValue>& arguments) override;
     std::shared_ptr<LoxFunction> bind(std::shared_ptr<class LoxInstance> instance);
     int arity() const override;
@@ -22,6 +22,7 @@ public:
 private:
     const FunctionStmt* m_declaration;
     std::shared_ptr<Environment> m_closureptr;
+    bool m_isInitializer;
 };
 
 #endif // LOXFUNCTION_H_

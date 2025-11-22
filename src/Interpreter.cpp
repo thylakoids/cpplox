@@ -207,7 +207,7 @@ void Interpreter::visitClassStmt(const ClassStmt &stmt) {
     m_envptr->define(stmt.name.lexeme, nullptr);
     std::unordered_map<std::string, std::shared_ptr<LoxFunction>> methods;
     for (const auto& method : stmt.methods) {
-        std::shared_ptr<LoxFunction> function = std::make_shared<LoxFunction>(method, m_envptr);
+        std::shared_ptr<LoxFunction> function = std::make_shared<LoxFunction>(method, m_envptr, method->name.lexeme == "init");
         methods[method->name.lexeme] = function;
     }
 
@@ -216,7 +216,7 @@ void Interpreter::visitClassStmt(const ClassStmt &stmt) {
 }
 
 void Interpreter::visitFunctionStmt(const FunctionStmt &stmt) {
-    std::shared_ptr<LoxFunction> function = std::make_shared<LoxFunction>(&stmt, m_envptr);
+    std::shared_ptr<LoxFunction> function = std::make_shared<LoxFunction>(&stmt, m_envptr, false);
     m_envptr->define(stmt.name.lexeme, function);
 }
 
