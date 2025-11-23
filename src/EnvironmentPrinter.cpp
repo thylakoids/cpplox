@@ -116,7 +116,7 @@ void formatEnvironmentRecursive(std::stringstream &ss, const Environment *env,
   // Recursively print enclosing environment
   if (env->enclosing != nullptr) {
     ss << std::string(totalWidth / 2, ' ') << "↓\n\n";
-    formatEnvironmentRecursive(ss, env->enclosing, depth + 1);
+    formatEnvironmentRecursive(ss, env->enclosing.get(), depth + 1);
   }
 }
 

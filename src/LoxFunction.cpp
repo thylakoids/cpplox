@@ -11,7 +11,7 @@ LoxFunction::LoxFunction(const FunctionStmt *declaration,
 LiteralValue LoxFunction::call(Interpreter &interpreter,
                                const std::vector<LiteralValue> &arguments) {
 
-  auto envptr = std::make_shared<Environment>(m_closureptr.get());
+  auto envptr = std::make_shared<Environment>(m_closureptr);
 
   // Bind arguments to parameters
   for (size_t i = 0; i < m_declaration->params.size(); i++) {
@@ -42,7 +42,7 @@ LiteralValue LoxFunction::call(Interpreter &interpreter,
 
 std::shared_ptr<LoxFunction>
 LoxFunction::bind(std::shared_ptr<LoxInstance> instance) {
-  auto envptr = std::make_shared<Environment>(m_closureptr.get());
+  auto envptr = std::make_shared<Environment>(m_closureptr);
   envptr->define("this", instance);
   return std::make_shared<LoxFunction>(m_declaration, envptr, m_isInitializer);
 }

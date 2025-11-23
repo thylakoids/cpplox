@@ -5,10 +5,11 @@
 #include "EnvironmentPrinter.h"
 #include "Expr.hpp"
 #include "error.h"
+#include <memory>
 #include <string>
 #include <unordered_map>
 
-class Environment {
+class Environment : public std::enable_shared_from_this<Environment> {
   // Make EnvironmentPrinter a friend class so it can access m_values and
   // enclosing
   friend void formatEnvironmentRecursive(std::stringstream &ss,
@@ -16,7 +17,8 @@ class Environment {
 
 public:
   Environment() = default;
-  explicit Environment(Environment *enclosing) : enclosing(enclosing) {}
+  explicit Environment(std::shared_ptr<Environment> enclosing)
+      : enclosing(std::move(enclosing)) {}
 
   void define(const std::string &name, const LiteralValue &value) {
     m_values[name] = value;
@@ -33,13 +35,13 @@ public:
   }
 
   LiteralValue getAt(int distance, const Token &name) {
-    Environment *environment = this;
+    std::shared_ptr<Environment> environment = shared_from_this();
     for (int i = 0; i < distance; i++) {
       environment = environment->enclosing;
     }
-    if (environment->m_values.find(name.lexeme) !=
-        environment->m_values.end()) {
-      return environment->m_values.at(name.lexeme);
+    auto it = environment->m_values.find(name.lexeme);
+    if (it != environment->m_values.end()) {
+      return it->second;
     }
     throw RuntimeError(name, "Undefined variable '" + name.lexeme + "'.");
   }
@@ -58,7 +60,7 @@ public:
   }
 
   void assignAt(int distance, const Token &name, const LiteralValue &value) {
-    Environment *environment = this;
+    std::shared_ptr<Environment> environment = shared_from_this();
     for (int i = 0; i < distance; i++) {
       environment = environment->enclosing;
     }
@@ -71,8 +73,7 @@ public:
   std::string toString() const { return formatEnvironment(*this); }
 
 public:
-  // We don't own the environment, it's not our responsibility to delete it
-  Environment *enclosing = nullptr;
+  std::shared_ptr<Environment> enclosing = nullptr;
 
 private:
   std::unordered_map<std::string, LiteralValue> m_values;

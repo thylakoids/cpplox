@@ -248,7 +248,7 @@ void Interpreter::visitClassStmt(const ClassStmt &stmt) {
 
   auto previousEnv = m_envptr;
   if (stmt.superclass) {
-    m_envptr = std::make_shared<Environment>(m_envptr.get());
+    m_envptr = std::make_shared<Environment>(m_envptr);
     m_envptr->define("super", superclass);
   }
 
@@ -312,7 +312,7 @@ LiteralValue Interpreter::visitAssignExpr(const AssignExpr &expr) {
 }
 
 void Interpreter::visitBlockStmt(const BlockStmt &stmt) {
-  auto env = std::make_shared<Environment>(m_envptr.get());
+  auto env = std::make_shared<Environment>(m_envptr);
   executeBlock(stmt.statements, env);
 }
 
