@@ -185,6 +185,33 @@ LiteralValue Interpreter::visitThisExpr(const ThisExpr &expr) {
   return lookUpVariable(expr.keyword, expr);
 }
 
+LiteralValue Interpreter::visitSuperExpr(const SuperExpr &expr) {
+  auto it = m_locals.find(&expr);
+  if (it == m_locals.end()) {
+    throw RuntimeError(expr.keyword, "Undefined 'super' binding.");
+  }
+
+  int distance = it->second;
+  LiteralValue superclassValue = m_envptr->getAt(distance, expr.keyword);
+  auto callable = std::get<std::shared_ptr<LoxCallable>>(superclassValue);
+  auto superclass = std::dynamic_pointer_cast<LoxClass>(callable);
+  if (!superclass) {
+    throw RuntimeError(expr.keyword, "Superclass must be a class.");
+  }
+
+  Token thisToken(TokenType::THIS, "this", expr.keyword.line);
+  LiteralValue objectValue = m_envptr->getAt(distance - 1, thisToken);
+  auto object = std::get<std::shared_ptr<LoxInstance>>(objectValue);
+
+  auto method = superclass->findMethod(expr.method.lexeme);
+  if (!method) {
+    throw RuntimeError(expr.method,
+                       "Undefined property '" + expr.method.lexeme + "'.");
+  }
+
+  return method->bind(object);
+}
+
 LiteralValue Interpreter::visitLogicalExpr(const LogicalExpr &expr) {
   LiteralValue left = evaluate(expr.left);
   if (expr.op.lexeme == "or") {

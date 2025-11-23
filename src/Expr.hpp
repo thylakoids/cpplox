@@ -288,7 +288,8 @@ public:
 
 class SuperExpr : public Expr {
 public:
-  SuperExpr(const Token &keyword, const Token &method) : keyword(keyword), method(method) {}
+  SuperExpr(const Token &keyword, const Token &method)
+      : keyword(keyword), method(method) {}
   std::string accept(ExprVisitor<std::string> &visitor) const override {
     return visitor.visitSuperExpr(*this);
   }

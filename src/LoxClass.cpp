@@ -14,15 +14,16 @@ LiteralValue LoxClass::call(Interpreter &interpreter,
 }
 
 int LoxClass::arity() const {
-  auto methos = findMethod("init");
-  if (methos) {
-    return methos->arity();
+  auto initializer = findMethod("init");
+  if (initializer) {
+    return initializer->arity();
   }
   return 0;
 }
 std::string LoxClass::toString() const { return m_name; }
 
-std::shared_ptr<LoxFunction> LoxClass::findMethod(const std::string &name) const {
+std::shared_ptr<LoxFunction>
+LoxClass::findMethod(const std::string &name) const {
   auto it = m_methods.find(name);
   if (it != m_methods.end()) {
     return it->second;

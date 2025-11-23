@@ -30,6 +30,7 @@ private:
   enum class ClassType {
     NONE,
     CLASS,
+    SUBCLASS,
   };
 
   enum class VariableState { DECLARED, DEFINED, USED };
@@ -92,6 +93,7 @@ public:
       if (stmt.name.lexeme == stmt.superclass->name.lexeme) {
         lox::error(stmt.superclass->name, "A class can't inherit from itself.");
       }
+      currentClass = ClassType::SUBCLASS;
       resolve(stmt.superclass);
     }
 
@@ -192,9 +194,9 @@ public:
   void visitSuperExpr(const SuperExpr &expr) override {
     if (currentClass == ClassType::NONE) {
       lox::error(expr.keyword, "Can't use 'super' outside of a class.");
-    } else if (currentClass != ClassType::CLASS) {
+    } else if (currentClass != ClassType::SUBCLASS) {
       lox::error(expr.keyword, "Can't use 'super' in a class with no "
-                                "superclass.");
+                               "superclass.");
     }
     resolveLocal(expr, expr.keyword, true);
   }

@@ -3,6 +3,7 @@
 #pragma once
 #include "LoxCallable.h"
 #include "LoxFunction.h"
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -22,12 +23,12 @@ public:
                     const std::vector<LiteralValue> &arguments) override;
   int arity() const override;
   std::string toString() const override;
+  std::shared_ptr<LoxFunction> findMethod(const std::string &name) const;
 
 private:
   std::string m_name;
   std::shared_ptr<LoxClass> m_superclass;
   std::unordered_map<std::string, std::shared_ptr<LoxFunction>> m_methods;
-  std::shared_ptr<LoxFunction> findMethod(const std::string &name) const;
 };
 
 #endif // LOXCLASS_H_
