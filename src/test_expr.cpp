@@ -1,8 +1,8 @@
-#include <iostream>
-#include <memory>
 #include "AstPrinter.hpp"
 #include "Expr.hpp"
 #include "Token.h"
+#include <iostream>
+#include <memory>
 
 int main() {
   AstPrinter printer;

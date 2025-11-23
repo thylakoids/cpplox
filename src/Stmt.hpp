@@ -2,9 +2,9 @@
 #define STMT_H_
 #pragma once
 
-#include <vector>
-#include "Token.h"
 #include "Expr.hpp"
+#include "Token.h"
+#include <vector>
 
 // Forward declarations of all statement types we'll need
 class ExpressionStmt;
@@ -25,21 +25,20 @@ class ReturnStmt;
  * statements are executed solely for their side effects, so they don't
  * return anything.
  */
-template <typename R>
-class StmtVisitor {
+template <typename R> class StmtVisitor {
 public:
-    virtual R visitExpressionStmt(const ExpressionStmt &stmt) = 0;
-    virtual R visitClassStmt(const ClassStmt &stmt) = 0;
-    virtual R visitFunctionStmt(const FunctionStmt &stmt) = 0;
-    virtual R visitIfStmt(const IfStmt &stmt) = 0;
-    virtual R visitPrintStmt(const PrintStmt &stmt) = 0;
-    virtual R visitVarStmt(const VarStmt &stmt) = 0;
-    virtual R visitWhileStmt(const WhileStmt &stmt) = 0;
-    virtual R visitBlockStmt(const BlockStmt &stmt) = 0;
-    virtual R visitBreakStmt(const BreakStmt &stmt) = 0;
-    virtual R visitContinueStmt(const ContinueStmt &stmt) = 0;
-    virtual R visitReturnStmt(const ReturnStmt &stmt) = 0;
-    virtual ~StmtVisitor() = default;
+  virtual R visitExpressionStmt(const ExpressionStmt &stmt) = 0;
+  virtual R visitClassStmt(const ClassStmt &stmt) = 0;
+  virtual R visitFunctionStmt(const FunctionStmt &stmt) = 0;
+  virtual R visitIfStmt(const IfStmt &stmt) = 0;
+  virtual R visitPrintStmt(const PrintStmt &stmt) = 0;
+  virtual R visitVarStmt(const VarStmt &stmt) = 0;
+  virtual R visitWhileStmt(const WhileStmt &stmt) = 0;
+  virtual R visitBlockStmt(const BlockStmt &stmt) = 0;
+  virtual R visitBreakStmt(const BreakStmt &stmt) = 0;
+  virtual R visitContinueStmt(const ContinueStmt &stmt) = 0;
+  virtual R visitReturnStmt(const ReturnStmt &stmt) = 0;
+  virtual ~StmtVisitor() = default;
 };
 
 /**
@@ -50,24 +49,24 @@ public:
  */
 class Stmt {
 public:
-    virtual ~Stmt() = default;
-    virtual void accept(StmtVisitor<void> &visitor) const = 0;
+  virtual ~Stmt() = default;
+  virtual void accept(StmtVisitor<void> &visitor) const = 0;
 };
 
 /**
  * A statement that wraps a single expression.
- * These are expressions that are used for their side effects rather than their value.
- * For example: "print 'hi';" or "getLine();"
+ * These are expressions that are used for their side effects rather than their
+ * value. For example: "print 'hi';" or "getLine();"
  */
 class ExpressionStmt : public Stmt {
 public:
-    ExpressionStmt(const Expr &expression) : expression(expression) {}
+  ExpressionStmt(const Expr &expression) : expression(expression) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitExpressionStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitExpressionStmt(*this);
+  }
 
-    const Expr &expression;
+  const Expr &expression;
 };
 
 /**
@@ -78,13 +77,13 @@ public:
  */
 class PrintStmt : public Stmt {
 public:
-    PrintStmt(const Expr &expression) : expression(expression) {}
+  PrintStmt(const Expr &expression) : expression(expression) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitPrintStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitPrintStmt(*this);
+  }
 
-    const Expr &expression;
+  const Expr &expression;
 };
 
 /**
@@ -96,29 +95,31 @@ public:
  */
 class VarStmt : public Stmt {
 public:
-    VarStmt(const Token &name, const Expr* initializer) 
-        : name(name), initializer(initializer) {}
+  VarStmt(const Token &name, const Expr *initializer)
+      : name(name), initializer(initializer) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitVarStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitVarStmt(*this);
+  }
 
-    const Token name;        // The name of the variable being declared
-    const Expr* initializer; // The initializer expression, or nullptr if not initialized
+  const Token name; // The name of the variable being declared
+  const Expr
+      *initializer; // The initializer expression, or nullptr if not initialized
 };
 
 class WhileStmt : public Stmt {
 public:
-    WhileStmt(const Expr &condition, const Stmt &body, const Stmt* increment = nullptr):
-        condition(condition), body(body),  increment(increment){}
+  WhileStmt(const Expr &condition, const Stmt &body,
+            const Stmt *increment = nullptr)
+      : condition(condition), body(body), increment(increment) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitWhileStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitWhileStmt(*this);
+  }
 
-    const Expr &condition;
-    const Stmt &body;
-    const Stmt* increment; // for-loops
+  const Expr &condition;
+  const Stmt &body;
+  const Stmt *increment; // for-loops
 };
 
 /**
@@ -128,29 +129,31 @@ public:
  */
 class BlockStmt : public Stmt {
 public:
-    // Pass by value + std::move pattern: efficiently handles both temporaries and persistent objects
-    // while clearly indicating ownership transfer of statements to this Block
-    BlockStmt(std::vector<Stmt*> statements) : statements(std::move(statements)) {}
+  // Pass by value + std::move pattern: efficiently handles both temporaries and
+  // persistent objects while clearly indicating ownership transfer of
+  // statements to this Block
+  BlockStmt(std::vector<Stmt *> statements)
+      : statements(std::move(statements)) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitBlockStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitBlockStmt(*this);
+  }
 
-    const std::vector<Stmt*> statements;
+  const std::vector<Stmt *> statements;
 };
 
 class IfStmt : public Stmt {
 public:
-    IfStmt(const Expr &condition, const Stmt &thenBranch, const Stmt *elseBranch)
-        : condition(condition), thenBranch(thenBranch), elseBranch(elseBranch) {}
+  IfStmt(const Expr &condition, const Stmt &thenBranch, const Stmt *elseBranch)
+      : condition(condition), thenBranch(thenBranch), elseBranch(elseBranch) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitIfStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitIfStmt(*this);
+  }
 
-    const Expr &condition;
-    const Stmt &thenBranch;
-    const Stmt *elseBranch; // nullptr if no else branch
+  const Expr &condition;
+  const Stmt &thenBranch;
+  const Stmt *elseBranch; // nullptr if no else branch
 };
 
 /**
@@ -159,64 +162,68 @@ public:
  */
 class BreakStmt : public Stmt {
 public:
-    BreakStmt(const Token& keyword) : keyword(keyword) {}
+  BreakStmt(const Token &keyword) : keyword(keyword) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitBreakStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitBreakStmt(*this);
+  }
 
-    const Token keyword;  // The 'break' token, for error reporting
+  const Token keyword; // The 'break' token, for error reporting
 };
 
 class ContinueStmt : public Stmt {
 public:
-    ContinueStmt(const Token& keyword, const Expr* increment = nullptr) : keyword(keyword) {}
+  ContinueStmt(const Token &keyword, const Expr *increment = nullptr)
+      : keyword(keyword) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitContinueStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitContinueStmt(*this);
+  }
 
-    const Token keyword;  // The 'continue' token, for error reporting
+  const Token keyword; // The 'continue' token, for error reporting
 };
 
 class ClassStmt : public Stmt {
 public:
-    ClassStmt(const Token &name, const std::vector<FunctionStmt*> &methods)
-        : name(name), methods(methods) {}
+  ClassStmt(const Token &name, std::vector<FunctionStmt *> methods,
+            const VariableExpr *superclass = nullptr)
+      : name(name), methods(std::move(methods)), superclass(superclass) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitClassStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitClassStmt(*this);
+  }
 
-    const Token name;
-    const std::vector<FunctionStmt*> methods;
+  const Token name;
+  const VariableExpr *superclass;
+  const std::vector<FunctionStmt *> methods;
 };
 
 class FunctionStmt : public Stmt {
 public:
-    FunctionStmt(const Token &name, const std::vector<Token> &params, const std::vector<Stmt*> &body)
-        : name(name), params(params), body(body) {}
+  FunctionStmt(const Token &name, const std::vector<Token> &params,
+               const std::vector<Stmt *> &body)
+      : name(name), params(params), body(body) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitFunctionStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitFunctionStmt(*this);
+  }
 
-    const Token name;
-    const std::vector<Token> params;
-    const std::vector<Stmt*> body;
+  const Token name;
+  const std::vector<Token> params;
+  const std::vector<Stmt *> body;
 };
 
 class ReturnStmt : public Stmt {
 public:
-    ReturnStmt(const Token &keyword, const Expr* value) : keyword(keyword), value(value) {}
+  ReturnStmt(const Token &keyword, const Expr *value)
+      : keyword(keyword), value(value) {}
 
-    void accept(StmtVisitor<void> &visitor) const override {
-        visitor.visitReturnStmt(*this);
-    }
+  void accept(StmtVisitor<void> &visitor) const override {
+    visitor.visitReturnStmt(*this);
+  }
 
-    const Token keyword;
-    const Expr* value; // The value to return, or nullptr if no return value
+  const Token keyword;
+  const Expr *value; // The value to return, or nullptr if no return value
 };
-
 
 #endif // STMT_H_

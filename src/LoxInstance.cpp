@@ -8,9 +8,9 @@ LiteralValue LoxInstance::get(const std::string &name) {
     return it->second;
   }
 
-  auto methodIt = m_klass->m_methods.find(name);
-  if (methodIt != m_klass->m_methods.end()) {
-    return methodIt->second->bind(shared_from_this());
+  auto method = m_klass->findMethod(name);
+  if (method) {
+    return method->bind(shared_from_this());
   }
 
   throw std::runtime_error("Undefined property '" + name + "'.");

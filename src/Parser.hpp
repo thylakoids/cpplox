@@ -74,13 +74,18 @@ private:
 
   Stmt *classDeclaration() {
     Token name = consume(TokenType::IDENTIFIER, "Expect class name.");
+    VariableExpr *superclass = nullptr;
+    if (match({TokenType::LESS})) {
+      consume(TokenType::IDENTIFIER, "Expect superclass name.");
+      superclass = allocate<VariableExpr>(previous());
+    }
     consume(TokenType::LEFT_BRACE, "Expect '{' before class body.");
     std::vector<FunctionStmt *> methods;
     while (!check(TokenType::RIGHT_BRACE) && !isAtEnd()) {
       methods.push_back(function("method"));
     }
     consume(TokenType::RIGHT_BRACE, "Expect '}' after class body.");
-    return allocate<ClassStmt>(name, methods);
+    return allocate<ClassStmt>(name, std::move(methods), superclass);
   }
 
   FunctionStmt *function(const std::string &kind) {
@@ -262,7 +267,7 @@ private:
       if (VariableExpr *ve = dynamic_cast<VariableExpr *>(exprptr)) {
         Token name = ve->name;
         return allocate<AssignExpr>(name, *value);
-      }else if (GetExpr *ge = dynamic_cast<GetExpr *>(exprptr)) {
+      } else if (GetExpr *ge = dynamic_cast<GetExpr *>(exprptr)) {
         return allocate<SetExpr>(ge->object, ge->name, *value);
       }
       // Don't throw it because the parser isn't in a confused state
@@ -355,8 +360,9 @@ private:
     while (true) {
       if (match({TokenType::LEFT_PAREN})) {
         exprptr = finishCall(exprptr);
-      }else if (match({TokenType::DOT})) {
-        Token name = consume(TokenType::IDENTIFIER, "Expect property name after '.'.");
+      } else if (match({TokenType::DOT})) {
+        Token name =
+            consume(TokenType::IDENTIFIER, "Expect property name after '.'.");
         exprptr = allocate<GetExpr>(*exprptr, name);
       } else {
         break;
@@ -383,7 +389,7 @@ private:
 
   Expr *primary() {
     // primary -> NUMBER | STRING | "true" | "false" | "nil" | "(" expression
-    // ")" | IDENTIFIER | "this" ;
+    // ")" | IDENTIFIER | "this" | "super" "." IDENTIFIER ;
     if (match({TokenType::FALSE}))
       return allocate<LiteralExpr>(false);
     if (match({TokenType::TRUE}))
@@ -400,6 +406,13 @@ private:
           previous().lexeme.substr(1, previous().lexeme.size() - 2));
     if (match({TokenType::THIS}))
       return allocate<ThisExpr>(previous());
+    if (match({TokenType::SUPER})) {
+      Token keyword = previous();
+      consume(TokenType::DOT, "Expect '.' after 'super'.");
+      Token method =
+          consume(TokenType::IDENTIFIER, "Expect superclass method name.");
+      return allocate<SuperExpr>(keyword, method);
+    }
     if (match({TokenType::IDENTIFIER}))
       return allocate<VariableExpr>(previous());
     if (match({TokenType::LEFT_PAREN})) {

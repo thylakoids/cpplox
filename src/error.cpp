@@ -6,8 +6,7 @@ namespace lox {
 bool hadError = false;
 bool hadRuntimeError = false;
 
-void report(int line, const std::string &where,
-                    const std::string &message) {
+void report(int line, const std::string &where, const std::string &message) {
   std::cerr << "[line " << line << "] Error" << where << ": " << message
             << std::endl;
 }
@@ -17,7 +16,7 @@ void error(int line, const std::string &message) {
   hadError = true;
 }
 
-void error(const Token& token, const std::string &message, bool isRuntime) {
+void error(const Token &token, const std::string &message, bool isRuntime) {
   if (token.type == TokenType::END_OF_FILE) {
     report(token.line, " at end", message);
   } else {
@@ -25,7 +24,7 @@ void error(const Token& token, const std::string &message, bool isRuntime) {
   }
   if (isRuntime) {
     hadRuntimeError = true;
-  } 
+  }
   hadError = true;
 }
 
@@ -35,4 +34,3 @@ void resetError() {
 }
 
 } // namespace lox
-

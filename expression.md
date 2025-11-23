@@ -34,6 +34,7 @@ call           → primary ( "(" arguments? ")" | "." IDENTIFIER )*
 arguments      → expression ( "," expression )*
 primary        → NUMBER | STRING | "true" | "false" | "nil"
                | "(" expression ")" | IDENTIFIER | "this"
+               | "super" "." IDENTIFIER
 
 ### Key Points:
 1. Each level only matches expressions at its precedence level or higher

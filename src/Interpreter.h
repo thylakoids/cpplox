@@ -57,6 +57,7 @@ public:
     LiteralValue visitGetExpr(const GetExpr &expr) override;
     LiteralValue visitSetExpr(const SetExpr &expr) override;
     LiteralValue visitThisExpr(const ThisExpr &expr) override;
+    LiteralValue visitSuperExpr(const SuperExpr &expr) override;
     LiteralValue visitLogicalExpr(const LogicalExpr &expr) override;
     LiteralValue visitAssignExpr(const AssignExpr &expr) override;
 

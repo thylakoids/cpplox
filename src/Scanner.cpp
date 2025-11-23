@@ -1,7 +1,7 @@
 #include "Scanner.h"
+#include "error.h"
 #include <fmt/core.h>
 #include <map>
-#include "error.h"
 
 using lox::error;
 
@@ -30,7 +30,7 @@ vector<Token> Scanner::scanTokens() {
 
 void Scanner::addToken(TokenType type) {
   string text = m_source.substr(m_start, m_current - m_start);
-  m_tokens.push_back({.type=type, .lexeme=text, .line=m_line});
+  m_tokens.push_back({.type = type, .lexeme = text, .line = m_line});
 }
 
 bool Scanner::isAtEnd() const { return m_current >= m_source.size(); }
@@ -138,7 +138,7 @@ void Scanner::scanToken() {
     else if (std::isalpha(c) || c == '_')
       handleIdentifier();
     else
-    error(m_line, fmt::format("Unexpected character \"{}\"", c));
+      error(m_line, fmt::format("Unexpected character \"{}\"", c));
     break;
   }
 }

@@ -218,6 +218,13 @@ void Interpreter::visitClassStmt(const ClassStmt &stmt) {
   }
 
   m_envptr->define(stmt.name.lexeme, nullptr);
+
+  auto previousEnv = m_envptr;
+  if (stmt.superclass) {
+    m_envptr = std::make_shared<Environment>(m_envptr.get());
+    m_envptr->define("super", superclass);
+  }
+
   std::unordered_map<std::string, std::shared_ptr<LoxFunction>> methods;
   for (const auto &method : stmt.methods) {
     std::shared_ptr<LoxFunction> function = std::make_shared<LoxFunction>(
@@ -227,6 +234,11 @@ void Interpreter::visitClassStmt(const ClassStmt &stmt) {
 
   std::shared_ptr<LoxClass> klass = std::make_shared<LoxClass>(
       stmt.name.lexeme, superclass, std::move(methods));
+
+  if (stmt.superclass) {
+    m_envptr = previousEnv;
+  }
+
   m_envptr->assign(stmt.name, klass);
 }
 

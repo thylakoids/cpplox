@@ -9,7 +9,7 @@ declaration    → classDecl
                | varDecl
                | statement ;
 
-classDecl      →  "class" IDENTIFIER "{" function* "}" ;
+classDecl      →  "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}" ;
 funDecl        → "fun" function ;
 varDecl        → "var" IDENTIFIER ( "=" expression )? ";" ;
 
@@ -50,11 +50,11 @@ unary          → ( "!" | "-" ) unary
                | call ;
 call           → primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
 arguments      → expression ( "," expression )* ;
-primary        → "true" | "false" | "nil"
+primary        → "true" | "false" | "nil" | "this"
                | NUMBER | STRING
                | "(" expression ")"
                | IDENTIFIER
-               | "this" ;
+               | "super" "." IDENTIFIER;
 
 ## Lexical Grammar
 NUMBER         → DIGIT+ ( "." DIGIT+ )? ;

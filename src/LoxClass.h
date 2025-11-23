@@ -6,12 +6,17 @@
 #include <string>
 #include <unordered_map>
 
-class LoxClass : public LoxCallable, public std::enable_shared_from_this<LoxClass> {
+class LoxClass : public LoxCallable,
+                 public std::enable_shared_from_this<LoxClass> {
   friend class LoxInstance;
+
 public:
-  LoxClass(std::string name);
-  LoxClass(std::string name,
-           std::unordered_map<std::string, std::shared_ptr<LoxFunction>> methods);
+  LoxClass(std::string name) : m_name(name) {}
+  LoxClass(
+      std::string name, std::shared_ptr<LoxClass> superclass,
+      std::unordered_map<std::string, std::shared_ptr<LoxFunction>> methods)
+      : m_name(std::move(name)), m_superclass(superclass),
+        m_methods(std::move(methods)) {}
 
   LiteralValue call(Interpreter &interpreter,
                     const std::vector<LiteralValue> &arguments) override;
@@ -20,7 +25,9 @@ public:
 
 private:
   std::string m_name;
+  std::shared_ptr<LoxClass> m_superclass;
   std::unordered_map<std::string, std::shared_ptr<LoxFunction>> m_methods;
+  std::shared_ptr<LoxFunction> findMethod(const std::string &name) const;
 };
 
 #endif // LOXCLASS_H_

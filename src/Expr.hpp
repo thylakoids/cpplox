@@ -22,6 +22,7 @@ class CallExpr;
 class GetExpr;
 class SetExpr;
 class ThisExpr;
+class SuperExpr;
 
 // Define literal value type that can hold any kind of literal
 // todo: int is redundant
@@ -43,6 +44,7 @@ public:
   virtual R visitGetExpr(const GetExpr &expr) = 0;
   virtual R visitSetExpr(const SetExpr &expr) = 0;
   virtual R visitThisExpr(const ThisExpr &expr) = 0;
+  virtual R visitSuperExpr(const SuperExpr &expr) = 0;
   virtual ~ExprVisitor() = default;
 };
 
@@ -283,4 +285,21 @@ public:
   }
   const Token keyword;
 };
+
+class SuperExpr : public Expr {
+public:
+  SuperExpr(const Token &keyword, const Token &method) : keyword(keyword), method(method) {}
+  std::string accept(ExprVisitor<std::string> &visitor) const override {
+    return visitor.visitSuperExpr(*this);
+  }
+  LiteralValue accept(ExprVisitor<LiteralValue> &visitor) const override {
+    return visitor.visitSuperExpr(*this);
+  }
+  void accept(ExprVisitor<void> &visitor) const override {
+    visitor.visitSuperExpr(*this);
+  }
+  const Token keyword;
+  const Token method;
+};
+
 #endif // EXPR_H_
